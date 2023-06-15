@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pass
-      POSTGRES_DB: medgrabber
+      POSTGRES_DB: grabber
     ports:
       - "5432:5432" 
 
