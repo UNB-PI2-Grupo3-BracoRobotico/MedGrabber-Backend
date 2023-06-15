@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 services:
   zookeeper:
@@ -20,3 +20,9 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./kafka-startup-scripts:/opt/kafka/docker # new volume mapping
+
+  order-manager:
+    build: .
+    volumes:
+      - .:/app
+    tty: true
