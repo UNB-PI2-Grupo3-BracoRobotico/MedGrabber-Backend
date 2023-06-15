@@ -2,7 +2,7 @@
 Backend repository for the robotic arm project
 
 
-### Diagrama representando comunicação entre os tópicos e os microserviços
+## Diagrama representando comunicação entre os tópicos e os microserviços
 
 Diagrama representando o fluxo de um pedido que foi realizado corretamente e houve sucesso em todas as etapas do pedido
 
@@ -31,9 +31,10 @@ sequenceDiagram
     order_service-->>database: Salva status do pedido finalizado
 ```
 
-### Milestones
+## Milestones
 
 Cada parte destacada representa um pedaço do software que deverão ser construidos e testados.
 Essa divisão torna possível o desenvolvimento em paralelo de cada parte.
 
+### Fluxo do Pedido
 ![diagrama-com](https://github.com/UNB-PI2-Grupo3-BracoRobotico/grabber-backend/assets/40258400/8e3cb9fd-d2ef-4610-ad36-b5eea070269d)
