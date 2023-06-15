@@ -17,4 +17,4 @@ jobs:
       run: docker-compose run order-manager make lint
 
     - name: Run Integration Tests
-      run: docker-compose run order-manager pytest
+      run: docker-compose run order-manager make test
