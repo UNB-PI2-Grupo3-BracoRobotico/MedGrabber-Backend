@@ -30,3 +30,10 @@ sequenceDiagram
     topic order-status->>order_service: Status: Pedido Separado
     order_service-->>database: Salva status do pedido finalizado
 ```
+
+### Milestones
+
+Cada parte destacada representa um pedaço do software que deverão ser construidos e testados.
+Essa divisão torna possível o desenvolvimento em paralelo de cada parte.
+
+![diagrama-com](https://github.com/UNB-PI2-Grupo3-BracoRobotico/grabber-backend/assets/40258400/8e3cb9fd-d2ef-4610-ad36-b5eea070269d)
