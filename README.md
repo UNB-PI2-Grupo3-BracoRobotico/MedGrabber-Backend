@@ -23,6 +23,9 @@ Este comando irá criar os tópicos no servidor Kafka.
 
 # Execução
 
+### 🚨 Tutorial KAFKA
+[Video: como usar o kafka nesse projeto](https://youtu.be/7xh3CTJqkVM)
+
 Execute a aplicação com o comando:
 
 ```sh
