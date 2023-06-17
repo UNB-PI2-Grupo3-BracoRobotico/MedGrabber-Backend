@@ -1,6 +1,6 @@
 name: Integration Test and Linting
 
-on: [push]
+on: [pull_request]
 
 jobs:
   build:
