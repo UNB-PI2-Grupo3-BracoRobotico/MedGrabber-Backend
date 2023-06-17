@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_add_two_numbers():
     """
     Dummy test to check if the test suite is working
