@@ -17,8 +17,8 @@ class KafkaClient:
     AGENT_NAME = "order_service"
 
     def __init__(self, bootstrap_servers):
-        logging.info(f'Initializing {self.AGENT_NAME}...')
-        
+        logging.info(f"Initializing {self.AGENT_NAME}...")
+
         self.producer = Producer({"bootstrap.servers": bootstrap_servers})
         self.consumer = Consumer(
             {
@@ -57,7 +57,7 @@ class KafkaClient:
             msg = self.consumer.poll(1.0)
 
             if msg is None:
-                logging.info(f'Waiting for message')
+                logging.info(f"Waiting for message")
                 continue
 
             if msg.error():
