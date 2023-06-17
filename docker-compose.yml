@@ -1,4 +1,4 @@
-version: '3'
+version: '3.9'
 
 services:
   zookeeper:
@@ -21,8 +21,26 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./kafka-startup-scripts:/opt/kafka/docker # new volume mapping
 
+  db:
+    image: postgres
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./src/database:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: grabber
+    ports:
+      - "5432:5432" 
+
   order-manager:
     build: .
     volumes:
       - .:/app
     tty: true
+    depends_on:
+      - db
+      - kafka
+
+volumes:
+  postgres:
