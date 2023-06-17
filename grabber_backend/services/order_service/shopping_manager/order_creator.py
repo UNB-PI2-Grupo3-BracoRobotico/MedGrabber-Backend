@@ -1,6 +1,9 @@
 import logging
 
 
+from ..models import Order
+
+
 class OrderCreator:
     def __init__(self, order):
         self.logger = logging.getLogger(__name__)
@@ -11,10 +14,12 @@ class OrderCreator:
         # TODO: use the database_controller package
         return True  # This is just a fake
 
-    def validate_order(self):
+    def validate_order(self, order):
         self.logger.info("Validating order")
 
-        pass
+        order = Order(**order)
+
+        return order
 
     def create_order(self):
         self.logger.info("Creating order in database")
