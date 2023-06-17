@@ -1,6 +1,41 @@
 # grabber-backend
 Backend repository for the robotic arm project
 
+# Instalação
+
+## Subindo os microsserviços
+
+```sh
+docker compose up -d
+```
+
+Este comando irá realizar a build e deixará disponível todos os containers da aplicação.
+
+## Configurando o kafka
+
+Após subir os microsserviços, é necessário criar os tópicos no servidor Kafka. Para isso, execute o comando:
+
+```sh
+make create-topics
+```
+
+Este comando irá criar os tópicos no servidor Kafka.
+
+# Execução
+
+Execute a aplicação com o comando:
+
+```sh
+docker compose up -d
+```
+
+### Interface para o Kafka
+
+Para visualizar os tópicos e as mensagens que estão sendo enviadas, acesse a interface do Kafka em http://localhost:8080
+
+Nessa interface é possível visualizar e criar mensagens para os tópicos do kafka.
+
+---
 
 ## Diagrama representando comunicação entre os tópicos e os microserviços
 

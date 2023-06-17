@@ -5,27 +5,43 @@ services:
     image: zookeeper:latest
     ports:
       - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
   
   kafka:
-    image: wurstmeister/kafka:latest
+    image: wurstmeister/kafka:2.13-2.8.1
     depends_on:
       - zookeeper
     ports:
       - "9092:9092"
     environment:
-      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false' # disable auto creating topics
+      KAFKA_ADVERTISED_HOST_NAME: kafka
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./kafka-startup-scripts:/opt/kafka/docker # new volume mapping
+      - ./kafka-startup-scripts:/opt/kafka-startup-scripts
+
+  akhq:
+    image: tchiotludo/akhq
+    ports:
+      - 8080:8080
+    depends_on:
+      - kafka
+    environment:
+      AKHQ_CONFIGURATION: |
+          akhq:
+            connections:
+              kafka:
+                properties:
+                  bootstrap.servers: "kafka:9092"
+                  default.api.timeout.ms: 15000000
 
   db:
     image: postgres
     volumes:
       - postgres:/var/lib/postgresql/data
-      - ./src/database:/docker-entrypoint-initdb.d
+      - ./database:/docker-entrypoint-initdb.d
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pass
