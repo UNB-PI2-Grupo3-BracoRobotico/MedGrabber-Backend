@@ -71,4 +71,3 @@ CREATE TABLE IF NOT EXISTS consumidor(
     CONSTRAINT fk_Pagamento FOREIGN KEY (id_Pagamento) REFERENCES Pagamento(id)
 );
 
-
