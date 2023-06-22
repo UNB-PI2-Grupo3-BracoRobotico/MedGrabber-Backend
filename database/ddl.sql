@@ -11,38 +11,28 @@ CREATE TABLE IF NOT EXISTS Inventario (
     id INT,
     id_Produto INT,
     localizacaoX POINT,
-    localizacaoy POINT,
+    localizacaoY POINT,
     quantidade INT,
     PRIMARY KEY(id),
     CONSTRAINT fk_Produto FOREIGN KEY (id_Produto) REFERENCES Produto(id)
 );
 
-CREATE TABLE IF NOT EXISTS Itens_da_compra (
-    id INT,
-    id_Produto INT,
-    PRIMARY KEY(id),
-    CONSTRAINT fk_produto FOREIGN KEY(id_Produto) REFERENCES Produto(id)
-);
-
 CREATE TABLE IF NOT EXISTS Carrinho (
     id INT,
-    id_Inventario INT,
-    id_Itens INT,
+    id_Produto INT,
     total FLOAT,
-    grupo integer not null default 0,
     PRIMARY KEY(id), 
-    CONSTRAINT fk_inventario FOREIGN KEY (id_Inventario) REFERENCES Inventario(id),
-    CONSTRAINT fk_Itens FOREIGN KEY (id_Itens) REFERENCES Itens_da_compra(id)
+    CONSTRAINT fk_Produto FOREIGN KEY (id_Produto) REFERENCES Produto(id)
 );
 
 CREATE TABLE IF NOT EXISTS Pagamento(
     id INT,
-    id_Itens INT,
+    id_Carrinho INT,
     status_pagamento integer not null default 0,
     consumidor VARCHAR(100),
     tipoPagamento INT,
     PRIMARY KEY(id),
-    CONSTRAINT fk_Itens FOREIGN KEY (id_Itens) REFERENCES Itens_da_compra(id)
+    CONSTRAINT fk_Carrinho FOREIGN KEY (id_Carrinho) REFERENCES Carrinho(id)
 );
 
 CREATE TABLE IF NOT EXISTS Usuario(
