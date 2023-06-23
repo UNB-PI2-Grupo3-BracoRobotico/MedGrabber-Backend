@@ -1,3 +1,5 @@
 confluent-kafka==2.1.1
 black==23.3.0
 pytest==7.3.2
+sqlalchemy
+psycopg2-binary
