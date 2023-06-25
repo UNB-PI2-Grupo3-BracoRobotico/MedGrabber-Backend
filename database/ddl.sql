@@ -1,6 +1,6 @@
 -- Adição de tabelas
 CREATE TABLE IF NOT EXISTS Produto (
-    id INT,
+    id BIGINT(11),
     nome VARCHAR(100),
     preco FLOAT,
     descricao VARCHAR(100),
