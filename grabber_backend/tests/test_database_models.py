@@ -26,52 +26,6 @@ class ModelTestCase(unittest.TestCase):
         self.session.commit()
         self.session.close()
 
-    # def test_usuario(self):
-    #     # Casos de teste para a classe Usuario
-    #     usuario = Usuario(cpf=123456789, nome='John Doe', login_usuario='johndoe', senha='mypassword')
-    #     self.session.add(usuario)
-    #     self.session.commit()
-
-    #     # Verificar se o usuário foi inserido corretamente
-    #     usuario_db = self.session.query(Usuario).filter_by(cpf=123456789).first()
-    #     self.assertEqual(usuario_db.nome, 'John Doe')
-
-    #     # Atualizar o nome do usuário
-    #     usuario_db.nome = 'Jane Doe'
-    #     self.session.commit()
-
-    #     # Verificar se a atualização foi bem-sucedida
-    #     usuario_atualizado = self.session.query(Usuario).filter_by(cpf=123456789).first()
-    #     self.assertEqual(usuario_atualizado.nome, 'Jane Doe')
-
-    #     # Remover o usuário
-    #     self.session.delete(usuario_atualizado)
-    #     self.session.commit()
-
-    #     # Verificar se o usuário foi removido corretamente
-    #     usuario_removido = self.session.query(Usuario).filter_by(cpf=123456789).first()
-    #     self.assertIsNone(usuario_removido)
-
-    # def test_carrinho(self):
-    #     # Casos de teste para a classe Carrinho
-    #     # ...
-
-    # def test_pagamento(self):
-    #     # Casos de teste para a classe Pagamento
-    #     # ...
-
-    # def test_pedidos(self):
-    #     # Casos de teste para a classe Pedidos
-    #     # ...
-
-    # def test_estoquista(self):
-    #     # Casos de teste para a classe Estoquista
-    #     # ...
-
-    # def test_consumidor(self):
-    #     # Casos de teste para a classe Consumidor
-    #     # ...
-
 if __name__ == '__main__':
     unittest.main()
 
