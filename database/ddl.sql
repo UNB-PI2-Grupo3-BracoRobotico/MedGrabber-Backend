@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS Produto (
 CREATE TABLE IF NOT EXISTS Inventario (
     id INT,
     id_Produto INT,
-    localizacaoX POINT,
-    localizacaoY POINT,
+    localizacaoX INT,
+    localizacaoY INT,
     quantidade INT,
     PRIMARY KEY(id),
     CONSTRAINT fk_Produto FOREIGN KEY (id_Produto) REFERENCES Produto(id)
