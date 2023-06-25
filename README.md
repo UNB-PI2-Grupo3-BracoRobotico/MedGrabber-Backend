@@ -1,6 +1,12 @@
 # grabber-backend
 Backend repository for the robotic arm project
 
+## Possui dúvidas?
+
+> Dúvidas sobre como rodar testes? Dúvidas sobre como usar o docker?
+
+Se você tem dúvidas sobre como realizar algumas ações no projeto, temos a seção de dúvidas na wiki do projeto: [FAQ - Perguntas Frequentes](https://github.com/UNB-PI2-Grupo3-BracoRobotico/grabber-backend/wiki)
+
 # Instalação
 
 ## Subindo os microsserviços
