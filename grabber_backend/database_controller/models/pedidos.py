@@ -1,14 +1,14 @@
-class Pedidos:
-    def __init__(self, id_Pagamento, pagamento, id_Carrinho, carrinho, id_Usuario, usuario, data_pedido, tipo, id=None):
+class Orders:
+    def __init__(self, payment_id, payment, cart_id, cart, user_id, user, order_date, order_type, id=None):
         self.id = id
-        self.id_Pagamento = id_Pagamento
-        self.pagamento = pagamento
-        self.id_Carrinho = id_Carrinho
-        self.carrinho = carrinho
-        self.id_Usuario = id_Usuario
-        self.usuario = usuario
-        self.data_pedido = data_pedido
-        self.tipo = tipo
+        self.payment_id = payment_id
+        self.payment = payment
+        self.cart_id = cart_id
+        self.cart = cart
+        self.user_id = user_id
+        self.user = user
+        self.order_date = order_date
+        self.order_type = order_type
     
     def __str__(self):
-        return f"Pedidos[id={self.id}, id_Pagamento={self.id_Pagamento}, pagamento={self.pagamento}, id_Carrinho={self.id_Carrinho}, carrinho={self.carrinho}, id_Usuario={self.id_Usuario},usuario={self.usuario}, data_pedido={self.data_pedido}, tipo={self.tipo}]"
+        return f"Orders[id={self.id}, payment_id={self.payment_id}, payment={self.payment}, cart_id={self.cart_id}, cart={self.cart}, user_id={self.user_id}, user={self.user}, order_date={self.order_date}, order_type={self.order_type}]"

@@ -1,10 +1,10 @@
-class Consumidor:
-    def __init__(self, id_Carrinho, carrinho, id_Pagamento, pagamento, id=None):
+class Consumer:
+    def __init__(self, cart_id, cart, payment_id, payment, id=None):
         self.id = id
-        self.id_Carrinho = id_Carrinho
-        self.carrinho = carrinho
-        self.id_Pagamento = id_Pagamento
-        self.pagamento = pagamento
+        self.cart_id = cart_id
+        self.cart = cart
+        self.payment_id = payment_id
+        self.payment = payment
     
     def __str__(self):
-        return f"Consumidor[id={self.id}, id_Carrinho={self.id_Carrinho}, carrinho={self.carrinho}, id_Pagamento={self.id_Pagamento}, pagamento={self.pagamento}]"
+        return f"Consumer[id={self.id}, cart_id={self.cart_id}, cart={self.cart}, payment_id={self.payment_id}, payment={self.payment}]"

@@ -1,9 +1,9 @@
-class Usuario:
-    def __init__(self, cpf, nome, login_usuario, senha):
+class User:
+    def __init__(self, cpf, name, username, password):
         self.cpf = cpf
-        self.nome = nome
-        self.login_usuario = login_usuario
-        self.senha = senha
+        self.name = name
+        self.username = username
+        self.password = password
     
     def __str__(self):
-        return f"Usuario[cpf={self.cpf}, nome={self.nome}, login_usuario={self.login_usuario}, senha={self.senha}]"
+        return f"User[cpf={self.cpf}, name={self.name}, username={self.username}, password={self.password}]"

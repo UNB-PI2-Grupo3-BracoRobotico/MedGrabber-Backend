@@ -1,7 +1,7 @@
-class Estoquista:
-    def __init__(self, id, controleEstoque):
+class Stocker:
+    def __init__(self, id, stock_control):
         self.id = id
-        self.controleEstoque = controleEstoque
+        self.stock_control = stock_control
     
     def __str__(self):
-        return f"Estoquista[id={self.id}, controleEstoque={self.controleEstoque}]"
+        return f"Stocker[id={self.id}, stock_control={self.stock_control}]"
