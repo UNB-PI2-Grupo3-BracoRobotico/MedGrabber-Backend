@@ -1,10 +1,10 @@
-CREATE TYPE user_role_type as ENUM ('customer', 'stock_manager')
+CREATE TYPE user_role_type as ENUM ('customer', 'stock_manager');
 
 CREATE TYPE order_status_type as ENUM (
     'created', 'pending', 'paid', 'separation', 'delivered', 'canceled'
-)
+);
 
-CREATE TYPE payment_status_type as ENUM ('pending', 'paid', 'canceled')
+CREATE TYPE payment_status_type as ENUM ('pending', 'paid', 'canceled');
 
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
@@ -28,8 +28,8 @@ CREATE TABLE product (
     FOREIGN KEY (modified_by) REFERENCES users(user_id)
 );
 
-CREATE TABLE order (
-    order_id SERIAL PRIMARY KEY,
+CREATE TABLE customer_order (
+    customer_order_id SERIAL PRIMARY KEY,
     user_id INTEGER,
     order_date DATE,
     total_cost DECIMAL(10,2),
@@ -38,21 +38,21 @@ CREATE TABLE order (
 );
 
 CREATE TABLE order_product (
-    order_id INTEGER,
+    customer_order_id INTEGER,
     product_id INTEGER,
     product_amount INTEGER,
-    PRIMARY KEY (order_id, product_id),
-    FOREIGN KEY (order_id) REFERENCES order(order_id),
+    PRIMARY KEY (customer_order_id, product_id),
+    FOREIGN KEY (customer_order_id) REFERENCES customer_order(customer_order_id),
     FOREIGN KEY (product_id) REFERENCES product(product_id)
 );
 
 CREATE TABLE payment (
     payment_id SERIAL PRIMARY KEY,
-    order_id INTEGER,
+    customer_order_id INTEGER,
     payment_date DATE,
     payment_method VARCHAR(50),
     payment_status payment_status_type,
-    FOREIGN KEY (order_id) REFERENCES order(order_id)
+    FOREIGN KEY (customer_order_id) REFERENCES customer_order(customer_order_id)
 );
 
 CREATE TABLE position (
