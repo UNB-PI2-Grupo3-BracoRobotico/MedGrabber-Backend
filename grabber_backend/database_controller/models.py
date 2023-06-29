@@ -45,7 +45,7 @@ class User(Base):
     personal_name = Column(String)
     machine_serial_number = Column(String)
     phone_number = Column(String)
-    user_role = Column(UserRoleEnum)
+    user_role = Column(Enum('customer', 'stock_manager', name='user_role_type'))
 
 
 class Product(Base):
