@@ -1,5 +1,6 @@
 import os
 import logging
+from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine
@@ -22,37 +23,45 @@ from psycopg2 import sql
 TEST_ENGINE_URL = "postgresql://postgres:pass@db/grabber"
 
 # GET dinamic ddl path
-DDL_PATH = os.path.join(os.path.dirname(__file__), "../../", "database", "ddl.sql")
-
-# create a new engine and session
-# engine = create_engine(TEST_ENGINE_URL)
-# Session = sessionmaker(bind=engine)
-Base = declarative_base()
-
-engine = None
-Session = None
-
-from grabber_backend.tests.utils import setup, teardown
+DDL_LIST = Path(os.path.join(os.path.dirname(__file__), "../../", "database")).glob('*')
 
 
-def test_user():
-    # setup()
+import psycopg2
+import pytest
+import os
 
-    session = Session()
+import psycopg2
+import pytest
 
-    new_user = User(
-        username="test_user",
-        password_hash="test_hash",
-        personal_name="Test User",
-        user_role=UserRoleEnum.customer,
-        phone_number="123456789",
+# Set up a test data for each test
+@pytest.fixture(scope='function')
+def setup_db():
+    conn = psycopg2.connect(
+        dbname='grabber',
+        user='postgres',
+        password='pass',
+        host='db',  # this should be the service name from your docker-compose file
+        port=5432,
     )
-    session.add(new_user)
-    session.commit()
+    cur = conn.cursor()
 
-    user = session.query(User).filter_by(username="test_user").first()
-    assert user is not None
+    # Add your setup SQL commands here, for example:
+    # cur.execute("INSERT INTO my_table (column1, column2) VALUES ('test_data1', 'test_data2')")
 
-    session.close()
+    conn.commit()
 
-    teardown()
+    yield conn
+
+    # Add your teardown SQL commands here, for example:
+    # cur.execute("DELETE FROM my_table WHERE column1 = 'test_data1' and column2 = 'test_data2'")
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# Test your stored procedures
+def test_stored_procedure(setup_db):
+    cur = setup_db.cursor()
+    cur.callproc('name_of_stored_procedure', [param1, param2])  # replace with your actual procedure name and params
+    result = cur.fetchone()
+    assert result == expected_result  # replace with your expected result
