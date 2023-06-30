@@ -1,11 +1,22 @@
-CREATE OR REPLACE FUNCTION insert_new_product(p_product_name VARCHAR, p_product_description VARCHAR, p_product_price DECIMAL, p_modified_by_username VARCHAR)
+CREATE OR REPLACE FUNCTION insert_new_product(p_product_name VARCHAR, p_product_description VARCHAR, p_product_price DECIMAL(10,2), p_modified_by_username VARCHAR)
 RETURNS VOID AS $$
+DECLARE
+  user_role user_role_type;
+  user_id INTEGER;
 BEGIN
-    INSERT INTO product (product_name, product_description, product_price, modified_by, modified_at)
-    VALUES (p_product_name, p_product_description, p_product_price, 
-        (SELECT user_id FROM users WHERE username = p_modified_by_username), NOW());
+    SELECT users.user_role, users.user_id INTO user_role, user_id
+    FROM users
+    WHERE users.username = p_modified_by_username;
+
+    IF user_role = 'stock_manager' THEN
+        INSERT INTO product (product_name, product_description, product_price, modified_by, modified_at)
+        VALUES (p_product_name, p_product_description, p_product_price, user_id, CURRENT_TIMESTAMP);
+    ELSE
+        RAISE EXCEPTION 'User role must be "stock_manager" to insert a new product';
+    END IF;
 END; $$
 LANGUAGE plpgsql;
+
 
 CREATE OR REPLACE FUNCTION insert_new_order(p_user_username VARCHAR, p_order_date DATE, p_total_cost DECIMAL, p_order_status order_status_type)
 RETURNS VOID AS $$

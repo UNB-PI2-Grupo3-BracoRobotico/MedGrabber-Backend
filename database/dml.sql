@@ -46,3 +46,12 @@
 -- (3, 3, 18, 10, 13, CURRENT_TIMESTAMP),
 -- (4, 4, 19, 25, 14, CURRENT_TIMESTAMP),
 -- (5, 5, 20, 30, 15, CURRENT_TIMESTAMP);
+
+-- SELECT insert_new_user('trueusername', 'hashedpassword', 'newuser@example.com', 'New User Store', 'New User', '123XYZ', '1232323290', 'stock_manager');
+
+-- SELECT insert_new_user('customerusername', 'hashedpassword', 'customeruser@example.com', 'New User Store', 'New User', '123XYZ', '1234567890', 'customer');
+
+-- SELECT insert_new_product('Apple', 'A fronch fruit.', 2.00, 'trueusername');
+
+-- SELECT insert_new_order('customerusername', CURRENT_DATE, 100.00, 'created');
+
