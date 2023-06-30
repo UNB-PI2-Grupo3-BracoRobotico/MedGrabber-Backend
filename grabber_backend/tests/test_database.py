@@ -1,10 +1,8 @@
 import os
-import logging
 from pathlib import Path
 
+import psycopg2
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from grabber_backend.database_controller.models import (
     User,
     Product,
@@ -14,54 +12,64 @@ from grabber_backend.database_controller.models import (
     Position,
     UserRoleEnum,
 )
-from sqlalchemy import create_engine, text
-from sqlalchemy.ext.declarative import declarative_base
-import psycopg2
-from psycopg2 import sql
-
 
 TEST_ENGINE_URL = "postgresql://postgres:pass@db/grabber"
 
-# GET dinamic ddl path
-DDL_LIST = Path(os.path.join(os.path.dirname(__file__), "../../", "database")).glob('*')
+DDL_LIST = Path(os.path.join(os.path.dirname(__file__), "../../", "database")).glob("*")
 
 
-import psycopg2
-import pytest
-import os
-
-import psycopg2
-import pytest
-
-# Set up a test data for each test
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def setup_db():
     conn = psycopg2.connect(
-        dbname='grabber',
-        user='postgres',
-        password='pass',
-        host='db',  # this should be the service name from your docker-compose file
+        dbname="grabber",
+        user="postgres",
+        password="pass",
+        host="db",
         port=5432,
     )
     cur = conn.cursor()
-
-    # Add your setup SQL commands here, for example:
-    # cur.execute("INSERT INTO my_table (column1, column2) VALUES ('test_data1', 'test_data2')")
 
     conn.commit()
 
     yield conn
 
-    # Add your teardown SQL commands here, for example:
-    # cur.execute("DELETE FROM my_table WHERE column1 = 'test_data1' and column2 = 'test_data2'")
-
     conn.commit()
     cur.close()
     conn.close()
 
-# Test your stored procedures
+
 def test_stored_procedure(setup_db):
+    username = "test_username"
+    password_hash = "test_pasword"
+    email = "test_email@gmail.com"
+    store_name = "test_store_name"
+    name = "Test Name"
+    machine_serial = "901248210941208"
+    phone_number = "1234567890"
+    user_role = "stock_manager"
+
     cur = setup_db.cursor()
-    cur.callproc('name_of_stored_procedure', [param1, param2])  # replace with your actual procedure name and params
-    result = cur.fetchone()
-    assert result == expected_result  # replace with your expected result
+    try:
+        cur.callproc(
+            "insert_new_user",
+            [
+                username,
+                password_hash,
+                email,
+                store_name,
+                name,
+                machine_serial,
+                phone_number,
+                user_role,
+            ],
+        )
+        result = cur.fetchone()
+
+        # query user
+        cur.execute("SELECT phone_number FROM users WHERE username = %s", (username,))
+        user = cur.fetchone()
+
+        assert user[0] == phone_number
+    finally:
+        cur.execute("DELETE FROM users WHERE username = %s", (username,))
+        cur.close()
