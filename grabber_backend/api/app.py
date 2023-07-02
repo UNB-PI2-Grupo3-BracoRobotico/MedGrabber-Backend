@@ -17,13 +17,11 @@ for retry in range(MAX_RETRIES):
     try:
         sleep(5)
         logger.info("Starting Kafka producer")
-        conf = {'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS}
+        conf = {"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS}
         producer = Producer(conf)
         break
     except Exception as e:
-        logger.error(
-            f"Failed to start Kafka producer: {e}, trying again... {retry}"
-        )
+        logger.error(f"Failed to start Kafka producer: {e}, trying again... {retry}")
 else:
     logger.error("Failed to start Kafka producer, exiting...")
     exit(1)
@@ -48,6 +46,6 @@ def read_root():
 @app.post("/orders/")
 async def create_order(order: Order):
     # Convert Order to JSON and produce to Kafka
-    producer.produce('create-order', order.json())
+    producer.produce("create-order", order.json())
     producer.flush()
     return {"status": "Order sent"}
