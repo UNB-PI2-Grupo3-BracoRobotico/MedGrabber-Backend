@@ -5,3 +5,4 @@ sqlalchemy==2.0.17
 uvicorn==0.22.0
 fastapi
 psycopg2-binary
+httpx
