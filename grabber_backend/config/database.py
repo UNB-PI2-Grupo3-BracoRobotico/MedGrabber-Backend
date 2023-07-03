@@ -7,3 +7,10 @@ DATABASE_CONNECTION = {
     "host": env.get("DB_HOST", "localhost"),
     "port": env.get("DB_PORT", "5432"),
 }
+
+DATABASE_CONNECTION_STRING = (
+    f"postgresql://"
+    f'{DATABASE_CONNECTION["user"]}:{DATABASE_CONNECTION["password"]}'
+    f'@{DATABASE_CONNECTION["host"]}:{DATABASE_CONNECTION["port"]}'
+    f'/{DATABASE_CONNECTION["dbname"]}'
+)

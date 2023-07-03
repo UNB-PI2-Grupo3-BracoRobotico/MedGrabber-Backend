@@ -9,6 +9,11 @@ from grabber_backend.config.kafka import (
     AUTO_OFFSET_RESET,
     ORDER_MANAGER_CONSUMER_GROUP_ID,
 )
+from grabber_backend.config.database import DATABASE_CONNECTION_STRING
+from grabber_backend.database_controller.database_handler import DatabaseHandler
+from grabber_backend.services.order_service.shopping_manager import OrderCreator
+from grabber_backend.database_controller.models import OrderStatusEnum
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -18,7 +23,7 @@ class KafkaClient:
 
     def __init__(self, bootstrap_servers):
         logging.info(f"Initializing {self.AGENT_NAME}...")
-
+        self.database_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
         self.producer = Producer({"bootstrap.servers": bootstrap_servers})
         self.consumer = Consumer(
             {
@@ -87,10 +92,34 @@ class KafkaClient:
         return json.dumps(message).encode("utf-8")
 
     def proccess(self, topic, message):
-        messages_to_send = {
-            "order-status": {"order_id": 1, "customer_id": 1, "status": "delivered"}
-        }
-        kafka_client.produce(messages_to_send)
+        if topic == "order-creation":
+            user = message.get("user")
+            order = message.get("order")
+
+            if order.get("user_id") != user.get("id"):
+                logging.error("User id in order is not the same as in user")
+                return
+
+            status, order_id = self.create_order(order)
+            messages_to_send = {
+                "order-status": (
+                    {
+                        "order_id": order_id,
+                        "customer_id": user.get("id"),
+                        "status": status,
+                    }
+                )
+            }
+            kafka_client.produce(messages_to_send)
+
+    def create_order(self, order):
+        order_database_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+        session = order_database_handler.create_session()
+        order_creator = OrderCreator(order, session)
+
+        order_status, order_id = order_creator.receive_order()
+
+        return order_status, order_id
 
 
 if __name__ == "__main__":
