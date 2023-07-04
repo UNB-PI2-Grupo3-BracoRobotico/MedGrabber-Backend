@@ -2,7 +2,7 @@ from time import sleep
 from typing import Optional
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from pydantic import BaseModel
 from confluent_kafka import Producer
 
@@ -43,9 +43,14 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.post("/orders/")
-async def create_order(order: Order):
+def produce_message(order: Order):
     # Convert Order to JSON and produce to Kafka
+    logger.info('Sending order to Kafka')
     producer.produce("create-order", order.json())
+    logger.info('Order sent to Kafka')
     producer.flush()
+
+@app.post("/orders/")
+async def create_order(order: Order, background_tasks: BackgroundTasks):
+    background_tasks.add_task(produce_message, order)
     return {"status": "Order sent"}

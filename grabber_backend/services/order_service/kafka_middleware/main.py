@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import json
+from time import sleep
 
 from confluent_kafka import Consumer, Producer, KafkaError
 
@@ -11,11 +12,14 @@ from grabber_backend.config.kafka import (
 )
 from grabber_backend.config.database import DATABASE_CONNECTION_STRING
 from grabber_backend.database_controller.database_handler import DatabaseHandler
-from grabber_backend.services.order_service.shopping_manager import OrderCreator
+from grabber_backend.services.order_service.shopping_manager.order_creator import OrderCreator
 from grabber_backend.database_controller.models import OrderStatusEnum
 
 
 logging.basicConfig(level=logging.INFO)
+
+MAX_RETRIES = 6
+RETRY_COOLDOWN = 10
 
 
 class KafkaClient:
@@ -24,15 +28,23 @@ class KafkaClient:
     def __init__(self, bootstrap_servers):
         logging.info(f"Initializing {self.AGENT_NAME}...")
         self.database_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-        self.producer = Producer({"bootstrap.servers": bootstrap_servers})
-        self.consumer = Consumer(
-            {
-                "bootstrap.servers": bootstrap_servers,
-                "group.id": ORDER_MANAGER_CONSUMER_GROUP_ID,
-                "auto.offset.reset": AUTO_OFFSET_RESET,
-            }
-        )
-
+        for retry in range(MAX_RETRIES):
+            try:
+                logging.info(f"Connecting to Kafka... {retry} attempt")
+                sleep(RETRY_COOLDOWN)
+                self.producer = Producer({"bootstrap.servers": bootstrap_servers})
+                self.consumer = Consumer(
+                    {
+                        "bootstrap.servers": bootstrap_servers,
+                        "group.id": ORDER_MANAGER_CONSUMER_GROUP_ID,
+                        "auto.offset.reset": AUTO_OFFSET_RESET,
+                    }
+                )
+                break
+            except Exception as e:
+                logging.error(f"Error initializing {self.AGENT_NAME}: {e}")
+        else:
+            raise Exception("Error initializing Kafka client")
     def delivery_report(self, err, msg):
         if err is not None:
             logging.error("Message delivery failed: {}".format(err))
@@ -57,12 +69,12 @@ class KafkaClient:
 
     def consume(self, topics):
         self.consumer.subscribe(topics)
+        logging.info(f"Waiting for message")
 
         while True:
             msg = self.consumer.poll(1.0)
 
             if msg is None:
-                logging.info(f"Waiting for message")
                 continue
 
             if msg.error():
@@ -92,7 +104,7 @@ class KafkaClient:
         return json.dumps(message).encode("utf-8")
 
     def proccess(self, topic, message):
-        if topic == "order-creation":
+        if topic == "create-order":
             user = message.get("user")
             order = message.get("order")
 
@@ -111,6 +123,8 @@ class KafkaClient:
                 )
             }
             kafka_client.produce(messages_to_send)
+        else:
+            logging.error(f"Unknown topic: {topic}")
 
     def create_order(self, order):
         order_database_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
@@ -125,7 +139,7 @@ class KafkaClient:
 if __name__ == "__main__":
     kafka_client = KafkaClient(KAFKA_BOOTSTRAP_SERVERS)
 
-    topics = ["order-creation", "order-status"]
+    topics = ["create-order", "order-status"]
     kafka_client.consume(topics)
 
     kafka_client.close()

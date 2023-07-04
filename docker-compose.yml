@@ -19,6 +19,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_HOST_NAME: kafka
       KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./kafka-startup-scripts:/opt/kafka-startup-scripts
@@ -72,6 +73,7 @@ services:
     depends_on:
       - db
       - kafka
+    command: python grabber_backend/services/order_service/kafka_middleware/main.py
     restart: on-failure
 
 volumes:
