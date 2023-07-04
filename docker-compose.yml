@@ -20,6 +20,7 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: kafka
       KAFKA_ADVERTISED_PORT: 9092
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_CREATE_TOPICS: "create-order:1:1,order-status:1:1,payment:1:1,order-products:1:1"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./kafka-startup-scripts:/opt/kafka-startup-scripts
