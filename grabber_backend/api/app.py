@@ -34,7 +34,16 @@ class Order(BaseModel):
     total_price: float
     payment_method: str
 
-
+class User(BaseModel):
+    username: str
+    password_hash: str
+    email: str
+    store_name: str
+    personal_name: str
+    machine_serial_number: str
+    phone_number: str
+    user_role: str
+    
 app = FastAPI()
 
 
@@ -54,3 +63,20 @@ def produce_message(order: Order):
 async def create_order(order: Order, background_tasks: BackgroundTasks):
     background_tasks.add_task(produce_message, order)
     return {"status": "Order sent"}
+
+@app.post("/users/")
+async def create_update_user(user: User):
+    # Convert User to JSON and produce to Kafka
+    producer.produce("upsert-user", user.json())
+    producer.flush()
+    return {"status": "User creation/update request sent"}
+
+
+@app.put("/users/{username}")
+async def update_user(username: str, user: User):
+    # Set the username to the path parameter
+    user.username = username
+    # Convert User to JSON and produce to Kafka
+    producer.produce("upsert-user", user.json())
+    producer.flush()
+    return {"status": "User update request sent"}
