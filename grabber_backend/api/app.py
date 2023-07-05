@@ -52,6 +52,7 @@ class User(BaseModel):
     phone_number: str
     user_role: str
 
+
 class Product(BaseModel):
     product_id: Optional[int]
     product_name: str
@@ -59,6 +60,7 @@ class Product(BaseModel):
     product_price: float
     modified_by_username: str
     modified_at: str
+
 
 app = FastAPI()
 
@@ -124,6 +126,7 @@ async def update_user(username: str, user: User):
         db_handler.close_session(session)
 
     return {"status": "User update request sent"}
+
 
 @app.post("/products/")
 async def create_product(product: Product):

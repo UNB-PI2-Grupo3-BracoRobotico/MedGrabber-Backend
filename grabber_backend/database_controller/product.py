@@ -5,14 +5,24 @@ from sqlalchemy.orm import relationship
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
 class Product:
-    def __init__(self, product_id, product_name, product_description, product_price, modified_by_username, modified_at):
+    def __init__(
+        self,
+        product_id,
+        product_name,
+        product_description,
+        product_price,
+        modified_by_username,
+        modified_at,
+    ):
         self.product_id = product_id
         self.product_name = product_name
         self.product_description = product_description
         self.product_price = product_price
         self.modified_by_username = modified_by_username
         self.modified_at = modified_at
+
 
 class ProductDatabaseHandler:
     def __init__(self, db_session):
