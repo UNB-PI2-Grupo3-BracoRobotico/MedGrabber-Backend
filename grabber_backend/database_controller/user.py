@@ -19,7 +19,7 @@ class UserDatabaseHandler:
 
         try:
             logger.info(f"Inserting user: {user.username}")
-            
+
             session.execute(
                 text(
                     "INSERT INTO users (username, password_hash, email, store_name, personal_name, machine_serial_number, phone_number, user_role) "
@@ -34,19 +34,19 @@ class UserDatabaseHandler:
                     "machine_serial_number": user.machine_serial_number,
                     "phone_number": user.phone_number,
                     "user_role": user.user_role,
-                }
+                },
             )
-            
+
             session.commit()
-            
+
             status = "inserted"
 
         except Exception as e:
             logger.error(f"Failed to insert user: {user.username} - {e}")
             session.rollback()
-            
+
             status = "failed"
-        
+
         return status
 
     def update_user(self, session, user: User):
@@ -65,5 +65,5 @@ class UserDatabaseHandler:
                 "phone_number": user.phone_number,
                 "user_role": user.user_role,
                 "username": user.username,
-            }
+            },
         )

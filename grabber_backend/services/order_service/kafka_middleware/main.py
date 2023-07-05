@@ -12,7 +12,9 @@ from grabber_backend.config.kafka import (
 )
 from grabber_backend.config.database import DATABASE_CONNECTION_STRING
 from grabber_backend.database_controller.database_handler import DatabaseHandler
-from grabber_backend.services.order_service.shopping_manager.order_creator import OrderCreator
+from grabber_backend.services.order_service.shopping_manager.order_creator import (
+    OrderCreator,
+)
 from grabber_backend.database_controller.models import OrderStatusEnum
 
 
@@ -45,6 +47,7 @@ class KafkaClient:
                 logging.error(f"Error initializing {self.AGENT_NAME}: {e}")
         else:
             raise Exception("Error initializing Kafka client")
+
     def delivery_report(self, err, msg):
         if err is not None:
             logging.error("Message delivery failed: {}".format(err))

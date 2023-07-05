@@ -39,6 +39,7 @@ class Order(BaseModel):
     total_price: float
     payment_method: str
 
+
 class User(BaseModel):
     username: str
     password_hash: str
@@ -48,7 +49,8 @@ class User(BaseModel):
     machine_serial_number: str
     phone_number: str
     user_role: str
-    
+
+
 app = FastAPI()
 
 
@@ -59,9 +61,9 @@ def read_root():
 
 def produce_message(order: Order):
     # Convert Order to JSON and produce to Kafka
-    logger.info('Sending order to Kafka')
+    logger.info("Sending order to Kafka")
     producer.produce("create-order", order.json())
-    logger.info('Order sent to Kafka')
+    logger.info("Order sent to Kafka")
     producer.flush()
 
 
@@ -85,7 +87,7 @@ async def create_user(user: User):
         logger.error(f"Failed to create/update user: {e}")
         return {"status": "Failed to create/update user"}, 500
 
-    finally:        
+    finally:
         logger.info(f"Closing database session")
         db_handler.close_session(session)
 
@@ -98,7 +100,7 @@ async def update_user(username: str, user: User):
     user.username = username
     logger.info(f"Updating user: {user}")
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-    
+
     try:
         logger.info(f"Creating database session")
         session = db_handler.create_session()
