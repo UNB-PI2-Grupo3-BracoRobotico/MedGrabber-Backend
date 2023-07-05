@@ -7,8 +7,11 @@ from pydantic import BaseModel
 from confluent_kafka import Producer
 
 from grabber_backend.config.kafka import KAFKA_BOOTSTRAP_SERVERS
+from grabber_backend.config.database import DATABASE_CONNECTION_STRING
 from grabber_backend.database_controller.database_handler import DatabaseHandler
-from grabber_backend.database_controller.User_database_handler import UserDatabaseHandler
+from grabber_backend.database_controller.user import UserDatabaseHandler
+from grabber_backend.database_controller.models import User
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -48,11 +51,6 @@ class User(BaseModel):
     
 app = FastAPI()
 
-# Criar uma instância do DatabaseHandler
-db_handler = DatabaseHandler()
-
-# Criar uma instância do UserDatabaseHandler, passando o DatabaseHandler
-user_db_handler = UserDatabaseHandler(db_handler)
 
 @app.get("/")
 def read_root():
@@ -66,23 +64,52 @@ def produce_message(order: Order):
     logger.info('Order sent to Kafka')
     producer.flush()
 
+
 @app.post("/orders/")
 async def create_order(order: Order, background_tasks: BackgroundTasks):
     background_tasks.add_task(produce_message, order)
     return {"status": "Order sent"}
 
-@app.post("/users/")
-async def create_update_user(user: User):
-    # Chamar o método de inserção/atualização do UserDatabaseHandler
-    user_db_handler.upsert_user(user)
-    return {"status": "User creation/update request sent"}
 
+@app.post("/users/")
+async def create_user(user: User):
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    logger.info(f"Creating user: {user}")
+    try:
+        session = db_handler.create_session()
+        user_db_handler = UserDatabaseHandler(session)
+        status = user_db_handler.insert_user(user)
+        logger.info(f"User created: {user}")
+
+    except Exception as e:
+        logger.error(f"Failed to create/update user: {e}")
+        return {"status": "Failed to create/update user"}, 500
+
+    finally:        
+        logger.info(f"Closing database session")
+        db_handler.close_session(session)
+
+    logger.info(f"Sending response back to client")
+    return {"status": f"{status}"}
 
 
 @app.put("/users/{username}")
 async def update_user(username: str, user: User):
-    # Set the username to the path parameter
     user.username = username
-    # Chamar o método de inserção/atualização do UserDatabaseHandler
-    user_db_handler.upsert_user(user)
+    logger.info(f"Updating user: {user}")
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    
+    try:
+        logger.info(f"Creating database session")
+        session = db_handler.create_session()
+        user_db_handler = UserDatabaseHandler(session)
+        user_db_handler.upsert_user(user)
+
+    except Exception as e:
+        logger.error(f"Failed to update user: {e}")
+        return {"status": "Failed to update user"}, 500
+
+    finally:
+        db_handler.close_session(session)
+
     return {"status": "User update request sent"}

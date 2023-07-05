@@ -105,8 +105,13 @@ class KafkaClient:
 
     def proccess(self, topic, message):
         if topic == "create-order":
+            logger.info(message)
             user = message.get("user")
             order = message.get("order")
+
+            if not user:
+                logging.error("User not found in message")
+                return
 
             if order.get("user_id") != user.get("id"):
                 logging.error("User id in order is not the same as in user")
