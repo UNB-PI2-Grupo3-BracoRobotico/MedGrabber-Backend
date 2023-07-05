@@ -11,6 +11,8 @@ from grabber_backend.config.database import DATABASE_CONNECTION_STRING
 from grabber_backend.database_controller.database_handler import DatabaseHandler
 from grabber_backend.database_controller.user import UserDatabaseHandler
 from grabber_backend.database_controller.models import User
+from grabber_backend.database_controller.product import ProductDatabaseHandler
+from grabber_backend.database_controller.models import Product
 
 
 logger = logging.getLogger(__name__)
@@ -50,6 +52,13 @@ class User(BaseModel):
     phone_number: str
     user_role: str
 
+class Product(BaseModel):
+    product_id: Optional[int]
+    product_name: str
+    product_description: str
+    product_price: float
+    modified_by_username: str
+    modified_at: str
 
 app = FastAPI()
 
@@ -115,3 +124,46 @@ async def update_user(username: str, user: User):
         db_handler.close_session(session)
 
     return {"status": "User update request sent"}
+
+@app.post("/products/")
+async def create_product(product: Product):
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    logger.info(f"Creating product: {product}")
+    try:
+        session = db_handler.create_session()
+        product_db_handler = ProductDatabaseHandler(session)
+        status = product_db_handler.insert_product(product)
+        logger.info(f"Product created: {product}")
+
+    except Exception as e:
+        logger.error(f"Failed to create/update product: {e}")
+        return {"status": "Failed to create/update product"}, 500
+
+    finally:
+        logger.info(f"Closing database session")
+        db_handler.close_session(session)
+
+    logger.info(f"Sending response back to client")
+    return {"status": f"{status}"}
+
+
+@app.put("/products/{product_id}")
+async def update_product(product_id: int, product: Product):
+    product.product_id = product_id
+    logger.info(f"Updating product: {product}")
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+
+    try:
+        logger.info(f"Creating database session")
+        session = db_handler.create_session()
+        product_db_handler = ProductDatabaseHandler(session)
+        product_db_handler.update_product(product)
+
+    except Exception as e:
+        logger.error(f"Failed to update product: {e}")
+        return {"status": "Failed to update product"}, 500
+
+    finally:
+        db_handler.close_session(session)
+
+    return {"status": "Product update request sent"}
