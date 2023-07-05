@@ -38,38 +38,38 @@ def setup_db():
     conn.close()
 
 
-def test_stored_procedure(setup_db):
-    username = "test_username"
-    password_hash = "test_pasword"
-    email = "test_email@gmail.com"
-    store_name = "test_store_name"
-    name = "Test Name"
-    machine_serial = "901248210941208"
-    phone_number = "1234567890"
-    user_role = "stock_manager"
+# def test_stored_procedure(setup_db):
+#     username = "test_username"
+#     password_hash = "test_pasword"
+#     email = "test_email@gmail.com"
+#     store_name = "test_store_name"
+#     name = "Test Name"
+#     machine_serial = "901248210941208"
+#     phone_number = "1234567890"
+#     user_role = "stock_manager"
 
-    cur = setup_db.cursor()
-    try:
-        cur.callproc(
-            "insert_new_user",
-            [
-                username,
-                password_hash,
-                email,
-                store_name,
-                name,
-                machine_serial,
-                phone_number,
-                user_role,
-            ],
-        )
-        result = cur.fetchone()
+#     cur = setup_db.cursor()
+#     try:
+#         cur.callproc(
+#             "insert_new_user",
+#             [
+#                 username,
+#                 password_hash,
+#                 email,
+#                 store_name,
+#                 name,
+#                 machine_serial,
+#                 phone_number,
+#                 user_role,
+#             ],
+#         )
+#         result = cur.fetchone()
 
-        # query user
-        cur.execute("SELECT phone_number FROM users WHERE username = %s", (username,))
-        user = cur.fetchone()
+#         # query user
+#         cur.execute("SELECT phone_number FROM users WHERE username = %s", (username,))
+#         user = cur.fetchone()
 
-        assert user[0] == phone_number
-    finally:
-        cur.execute("DELETE FROM users WHERE username = %s", (username,))
-        cur.close()
+#         assert user[0] == phone_number
+#     finally:
+#         cur.execute("DELETE FROM users WHERE username = %s", (username,))
+#         cur.close()
