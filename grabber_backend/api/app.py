@@ -72,6 +72,47 @@ async def create_order(order: Order, background_tasks: BackgroundTasks):
     background_tasks.add_task(produce_message, order)
     return {"status": "Order sent"}
 
+@app.get("/orders/")
+async def get_orders():
+    # TODO: Implement actual database query
+    return {
+        "orders": [
+            {
+                "id": 1,
+                "user": "bobross",
+                "order_items": [
+                    {"id": 1, "name": "Caixa de Papelão", "price": 10.0, "quantity": 2},
+                    {"id": 2, "name": "Livro: Python for Dummies", "price": 20.0, "quantity": 1},
+                ],
+                "total_price": 40.0,
+                "payment_method": "pix",
+                "status": "pending",
+            },
+            {
+                "id": 2,
+                "user": "johndoe",
+                "order_items": [
+                    {"id": 3, "name": "Controle Logitech", "price": 30.0, "quantity": 1},
+                    {"id": 4, "name": "Mouse Bluetooth", "price": 40.0, "quantity": 3},
+                ],
+                "total_price": 150.0,
+                "payment_method": "pix",
+                "status": "delivered",
+            },
+            {
+                "id": 2,
+                "user": "johndoe",
+                "order_items": [
+                    {"id": 5, "name": "Licor Baileys", "price": 100.0, "quantity": 6},
+                    {"id": 4, "name": "Mouse Bluetooth", "price": 40.0, "quantity": 1},
+                ],
+                "total_price": 640.0,
+                "payment_method": "pix",
+                "status": "delivered",
+            },
+        ]   
+    }
+
 
 @app.post("/users/")
 async def create_user(user: User):
@@ -115,3 +156,91 @@ async def update_user(username: str, user: User):
         db_handler.close_session(session)
 
     return {"status": "User update request sent"}
+
+@app.get("/users/")
+async def get_users_list():
+    # TODO: Implement actual database query
+    return {
+        "users": [
+            {
+                "username": "bobross",
+                "email": "bobloco@painting.com"
+            },
+            {
+                "username": "johndoe",
+                "email": "darkevil@provider.com"
+            }
+        ]
+    }
+
+@app.get('/storage/')
+async def get_storage():
+    return {
+        "storage": [
+            {
+                "id": 1,
+                "name": "Caixa de Papelão",
+                "description": "Caixa de papelão para transporte de objetos",
+                "price": 10.0,
+                "quantity": 10
+                "position_x": 0,
+                "position_y": 0, 
+            },
+            {
+                "id": 2,
+                "name": "Livro: Python for Dummies",
+                "description": "Livro de Python para iniciantes
+                "price": 20.0,
+                "quantity": 5,
+                "position_x": 0,
+                "position_y": 1,
+            },
+            {
+                "id": 3,
+                "name": "Controle Logitech",
+                "description": "Controle de submarino",
+                "price": 30.0,
+                "quantity": 2,
+                "position_x": 1,
+                "position_y": 0,
+            },
+            {
+                "id": 4,
+                "name": "Mouse Bluetooth",
+                "description": "Mouse sem fio",
+                "price": 40.0,
+                "quantity": 10,
+                "position_x": 1,
+                "position_y": 1,
+            },
+            {
+                "id": 5,
+                "name": "Licor Baileys",
+                "description": "Licor de chocolate",
+                "price": 100.0,
+                "quantity": 10,
+                "position_x": 2,
+                "position_y": 0,
+            }
+        ]
+        "available_positions": [
+            {
+                "position_x": 2,
+                "position_y": 2,
+            },
+            {
+                "position_x": 2,
+                "position_y": 1,
+            },
+            {
+                "position_x": 1,
+                "position_y": 2,
+            },
+            {
+                "position_x": 0,
+                "position_y": 2,
+            },
+    }
+
+    
+
