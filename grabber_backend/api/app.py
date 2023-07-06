@@ -72,6 +72,7 @@ async def create_order(order: Order, background_tasks: BackgroundTasks):
     background_tasks.add_task(produce_message, order)
     return {"status": "Order sent"}
 
+
 @app.get("/orders/")
 async def get_orders():
     # TODO: Implement actual database query
@@ -82,7 +83,12 @@ async def get_orders():
                 "user": "bobross",
                 "order_items": [
                     {"id": 1, "name": "Caixa de Papelão", "price": 10.0, "quantity": 2},
-                    {"id": 2, "name": "Livro: Python for Dummies", "price": 20.0, "quantity": 1},
+                    {
+                        "id": 2,
+                        "name": "Livro: Python for Dummies",
+                        "price": 20.0,
+                        "quantity": 1,
+                    },
                 ],
                 "total_price": 40.0,
                 "payment_method": "pix",
@@ -92,7 +98,12 @@ async def get_orders():
                 "id": 2,
                 "user": "johndoe",
                 "order_items": [
-                    {"id": 3, "name": "Controle Logitech", "price": 30.0, "quantity": 1},
+                    {
+                        "id": 3,
+                        "name": "Controle Logitech",
+                        "price": 30.0,
+                        "quantity": 1,
+                    },
                     {"id": 4, "name": "Mouse Bluetooth", "price": 40.0, "quantity": 3},
                 ],
                 "total_price": 150.0,
@@ -110,7 +121,7 @@ async def get_orders():
                 "payment_method": "pix",
                 "status": "delivered",
             },
-        ]   
+        ]
     }
 
 
@@ -157,23 +168,19 @@ async def update_user(username: str, user: User):
 
     return {"status": "User update request sent"}
 
+
 @app.get("/users/")
 async def get_users_list():
     # TODO: Implement actual database query
     return {
         "users": [
-            {
-                "username": "bobross",
-                "email": "bobloco@painting.com"
-            },
-            {
-                "username": "johndoe",
-                "email": "darkevil@provider.com"
-            }
+            {"username": "bobross", "email": "bobloco@painting.com"},
+            {"username": "johndoe", "email": "darkevil@provider.com"},
         ]
     }
 
-@app.get('/storage/')
+
+@app.get("/storage/")
 async def get_storage():
     return {
         "storage": [
@@ -182,14 +189,14 @@ async def get_storage():
                 "name": "Caixa de Papelão",
                 "description": "Caixa de papelão para transporte de objetos",
                 "price": 10.0,
-                "quantity": 10
+                "quantity": 10,
                 "position_x": 0,
-                "position_y": 0, 
+                "position_y": 0,
             },
             {
                 "id": 2,
                 "name": "Livro: Python for Dummies",
-                "description": "Livro de Python para iniciantes
+                "description": "Livro de Python para iniciantes",
                 "price": 20.0,
                 "quantity": 5,
                 "position_x": 0,
@@ -221,8 +228,8 @@ async def get_storage():
                 "quantity": 10,
                 "position_x": 2,
                 "position_y": 0,
-            }
-        ]
+            },
+        ],
         "available_positions": [
             {
                 "position_x": 2,
@@ -240,7 +247,5 @@ async def get_storage():
                 "position_x": 0,
                 "position_y": 2,
             },
+        ],
     }
-
-    
-
