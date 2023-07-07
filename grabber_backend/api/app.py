@@ -12,7 +12,8 @@ from grabber_backend.database_controller.database_handler import DatabaseHandler
 from grabber_backend.database_controller.user import UserDatabaseHandler
 from grabber_backend.database_controller.models import User
 from grabber_backend.database_controller.product import ProductDatabaseHandler
-from grabber_backend.database_controller.models import Product
+from grabber_backend.database_controller.models import Product, Position
+from grabber_backend.database_controller.position import PositionDatabaseHandler
 
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,18 @@ class Product(BaseModel):
     product_price: float
     modified_by_username: str
     modified_at: str
+    position: Position
+    weight: float
+    size: str
 
+class Position(BaseModel):
+    position_id: Optional[int]
+    position_x: int
+    position_y: int
+    product_id: int
+    product_amount: int
+    modified_by_username: str
+    
 
 app = FastAPI()
 
@@ -135,6 +147,18 @@ async def create_product(product: Product):
     try:
         session = db_handler.create_session()
         product_db_handler = ProductDatabaseHandler(session)
+
+        position_db_handler = PositionDatabaseHandler(session)
+        position = Position(
+            position_x=product.position.position_x,
+            position_y=product.position.position_y,
+            product_amount=1,
+            modified_by_username=product.modified_by_username,
+        )
+        status = position_db_handler.insert_position(position)
+
+        product.position = position
+
         status = product_db_handler.insert_product(product)
         logger.info(f"Product created: {product}")
 
@@ -170,3 +194,49 @@ async def update_product(product_id: int, product: Product):
         db_handler.close_session(session)
 
     return {"status": "Product update request sent"}
+
+@app.post("/positions/")
+async def create_position(position: Position):
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    logger.info(f"Creating position: {position}")
+
+    try:
+        session = db_handler.create_session()
+        position_db_handler = PositionDatabaseHandler(session)
+        status = position_db_handler.insert_position(position)
+        logger.info(f"Position created: {position}")
+
+    except Exception as e:
+        logger.error(f"Failed to create position: {e}")
+        return {"status": "Failed to create position"}, 500
+
+    finally:
+        logger.info(f"Closing database session")
+        db_handler.close_session(session)
+
+    logger.info(f"Sending response back to client")
+    return {"status": status}
+
+
+@app.put("/positions/{position_id}")
+async def update_position(position_id: int, position: Position):
+    position.position_id = position_id
+    logger.info(f"Updating position: {position}")
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+
+    try:
+        session = db_handler.create_session()
+        position_db_handler = PositionDatabaseHandler(session)
+        status = position_db_handler.update_position(position)
+        logger.info(f"Position updated: {position}")
+
+    except Exception as e:
+        logger.error(f"Failed to update position: {e}")
+        return {"status": "Failed to update position"}, 500
+
+    finally:
+        logger.info(f"Closing database session")
+        db_handler.close_session(session)
+
+    logger.info(f"Sending response back to client")
+    return {"status": status}

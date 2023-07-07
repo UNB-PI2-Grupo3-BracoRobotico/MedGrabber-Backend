@@ -15,6 +15,8 @@ class Product:
         product_price,
         modified_by_username,
         modified_at,
+        weight,
+        size,
     ):
         self.product_id = product_id
         self.product_name = product_name
@@ -22,6 +24,8 @@ class Product:
         self.product_price = product_price
         self.modified_by_username = modified_by_username
         self.modified_at = modified_at
+        self.weight = weight
+        self.size = size
 
 
 class ProductDatabaseHandler:
@@ -37,8 +41,8 @@ class ProductDatabaseHandler:
 
             session.execute(
                 text(
-                    "INSERT INTO products (product_id, product_name, product_description, product_price, modified_by_username, modified_at) "
-                    "VALUES (:product_id, :product_name, :product_description, :product_price, :modified_by_username, :modified_at)"
+                    "INSERT INTO products (product_id, product_name, product_description, product_price, modified_by_username, modified_at, weight, size) "
+                    "VALUES (:product_id, :product_name, :product_description, :product_price, :modified_by_username, :modified_at, :weight, :size)"
                 ),
                 {
                     "product_id": product.product_id,
@@ -47,6 +51,8 @@ class ProductDatabaseHandler:
                     "product_price": product.product_price,
                     "modified_by_username": product.modified_by_username,
                     "modified_at": product.modified_at,
+                    "weight": product.weight,
+                    "size": product.size,
                 },
             )
 
@@ -70,6 +76,7 @@ class ProductDatabaseHandler:
                 text(
                     "UPDATE products SET product_name = :product_name, product_description = :product_description, "
                     "product_price = :product_price, modified_by_username = :modified_by_username, modified_at = :modified_at "
+                    "weight = :weight, size = :size "
                     "WHERE product_id = :product_id"
                 ),
                 {
@@ -78,6 +85,8 @@ class ProductDatabaseHandler:
                     "product_price": product.product_price,
                     "modified_by_username": product.modified_by_username,
                     "modified_at": product.modified_at,
+                    "weight": product.weight,
+                    "size": product.size,
                     "product_id": product.product_id,
                 },
             )
