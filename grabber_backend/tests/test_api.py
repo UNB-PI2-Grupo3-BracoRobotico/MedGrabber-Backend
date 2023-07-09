@@ -16,7 +16,7 @@ def test_create_order():
         "user": "jonasb",
         "order_items": [{"product_id": "12", "quantity": 3, "price": "12.00"}],
         "payment_method": "pix",
-        "total_price": "36.00",
+        "total_price": 36.00,
     }
     response = client.post("/orders/", json=order)
     assert response.status_code == 200

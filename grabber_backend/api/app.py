@@ -90,6 +90,7 @@ async def get_orders():
                         "position_x": 0,
                         "position_y": 1,
                         "size": "M",
+                        "weight": 0.5,
                     },
                     {
                         "id": 2,
@@ -99,6 +100,7 @@ async def get_orders():
                         "position_x": 0,
                         "position_y": 0,
                         "size": "M",
+                        "weight": 0.3,
                     },
                 ],
                 "total_price": 40.0,
@@ -118,6 +120,7 @@ async def get_orders():
                         "position_x": 1,
                         "position_y": 0,
                         "size": "P",
+                        "weight": 0.2,
                     },
                     {
                         "id": 4,
@@ -127,6 +130,7 @@ async def get_orders():
                         "position_x": 0,
                         "position_y": 1,
                         "size": "M",
+                        "weight": 0.3,
                     },
                 ],
                 "total_price": 150.0,
@@ -146,6 +150,7 @@ async def get_orders():
                         "position_x": 0,
                         "position_y": 2,
                         "size": "G",
+                        "weight": 1.0,
                     },
                     {
                         "id": 4,
@@ -155,6 +160,7 @@ async def get_orders():
                         "position_x": 2,
                         "position_y": 2,
                         "size": "P",
+                        "weight": 0.3,
                     },
                 ],
                 "total_price": 640.0,
