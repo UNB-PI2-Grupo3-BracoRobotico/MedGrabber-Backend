@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from grabber_backend.database_controller.models import Position
 
+
 class PositionDatabaseHandler:
     def __init__(self, db_session: Session):
         self.session = db_session

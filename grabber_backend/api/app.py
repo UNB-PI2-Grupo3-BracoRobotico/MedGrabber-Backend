@@ -65,6 +65,7 @@ class Product(BaseModel):
     weight: float
     size: str
 
+
 class Position(BaseModel):
     position_id: Optional[int]
     position_x: int
@@ -72,7 +73,7 @@ class Position(BaseModel):
     product_id: int
     product_amount: int
     modified_by_username: str
-    
+
 
 app = FastAPI()
 
@@ -319,6 +320,7 @@ async def get_storage():
         ],
     }
 
+
 @app.get("/storage/")
 async def get_storage():
     return {
@@ -454,6 +456,7 @@ async def update_product(product_id: int, product: Product):
         db_handler.close_session(session)
 
     return {"status": "Product update request sent"}
+
 
 @app.post("/positions/")
 async def create_position(position: Position):
