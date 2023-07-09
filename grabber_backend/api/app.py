@@ -82,12 +82,14 @@ async def get_orders():
                 "id": 1,
                 "user": "bobross",
                 "order_items": [
-                    {"id": 1, "name": "Caixa de Papelão", "price": 10.0, "quantity": 2},
+                    {"id": 1, "name": "Caixa de Papelão", "price": 10.0, "quantity": 2, "position_x": 0, "position_y": 1, "size": "M"},
                     {
                         "id": 2,
                         "name": "Livro: Python for Dummies",
                         "price": 20.0,
                         "quantity": 1,
+                        "position_x": 0, "position_y": 0,
+                        "size": "M"
                     },
                 ],
                 "total_price": 40.0,
@@ -104,8 +106,9 @@ async def get_orders():
                         "name": "Controle Logitech",
                         "price": 30.0,
                         "quantity": 1,
+                        "position_x": 1, "position_y": 0, "size": "P"
                     },
-                    {"id": 4, "name": "Mouse Bluetooth", "price": 40.0, "quantity": 3},
+                    {"id": 4, "name": "Mouse Bluetooth", "price": 40.0, "quantity": 3, "position_x": 0, "position_y": 1, "size": "M"},
                 ],
                 "total_price": 150.0,
                 "payment_method": "pix",
@@ -116,8 +119,8 @@ async def get_orders():
                 "id": 2,
                 "user": "johndoe",
                 "order_items": [
-                    {"id": 5, "name": "Licor Baileys", "price": 100.0, "quantity": 6},
-                    {"id": 4, "name": "Mouse Bluetooth", "price": 40.0, "quantity": 1},
+                    {"id": 5, "name": "Licor Baileys", "price": 100.0, "quantity": 6, "position_x": 0, "position_y": 2, "size": "G"},
+                    {"id": 4, "name": "Mouse Bluetooth", "price": 40.0, "quantity": 1, "position_x": 2, "position_y": 2, "size": "P"},
                 ],
                 "total_price": 640.0,
                 "payment_method": "pix",
