@@ -1,16 +1,19 @@
 from time import sleep
-from typing import Optional
+from typing import Optional, List
 import logging
 
 from fastapi import FastAPI, BackgroundTasks
 from pydantic import BaseModel
 from confluent_kafka import Producer
+from sqlalchemy import text
 
 from grabber_backend.config.kafka import KAFKA_BOOTSTRAP_SERVERS
 from grabber_backend.config.database import DATABASE_CONNECTION_STRING
 from grabber_backend.database_controller.database_handler import DatabaseHandler
 from grabber_backend.database_controller.user import UserDatabaseHandler
 from grabber_backend.database_controller.models import User
+from grabber_backend.database_controller.product import ProductDatabaseHandler
+from grabber_backend.database_controller.models import Product, Position
 
 
 logger = logging.getLogger(__name__)
@@ -49,6 +52,18 @@ class User(BaseModel):
     machine_serial_number: str
     phone_number: str
     user_role: str
+
+
+class ProductPosition(BaseModel):
+    product_name: str
+    product_description: str
+    product_price: float
+    peso: float
+    size: str
+    modified_by_username: str
+    position_x: int
+    position_y: int
+    product_amount: int
 
 
 app = FastAPI()
@@ -295,3 +310,119 @@ async def get_storage():
             },
         ],
     }
+
+
+@app.post("/products/")
+async def create_product(product: ProductPosition):
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    logger.info(f"Creating product: {product}")
+    try:
+        session = db_handler.create_session()
+        product_db_handler = ProductDatabaseHandler(session)
+
+        status = product_db_handler.insert_product(product)
+        logger.info(f"Product created: {product}")
+
+    except Exception as e:
+        logger.error(f"Failed to create/update product: {e}")
+        return {"status": "Failed to create/update product"}, 500
+
+    finally:
+        logger.info(f"Closing database session")
+        db_handler.close_session(session)
+
+    logger.info(f"Sending response back to client")
+    return {"status": f"{status}"}
+
+
+class ProductPositionData(BaseModel):
+    product_id: Optional[int]
+    product_name: Optional[str]
+    product_description: Optional[str]
+    product_price: Optional[float]
+    peso: Optional[float]
+    size: Optional[str]
+    position_x: int
+    position_y: int
+
+
+@app.get("/products/")
+async def get_product_position_list():
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    with db_handler.create_session() as connection:
+        # Query for all products with filled positions.
+        result_filled_positions = connection.execute(
+            text(
+                """
+            SELECT 
+                p.product_id,
+                p.product_name,
+                p.product_description,
+                p.product_price,
+                p.peso,
+                p.size,
+                pos.position_x,
+                pos.position_y
+            FROM 
+                position pos
+            JOIN 
+                product p 
+            ON 
+                pos.product_id = p.product_id
+            WHERE 
+                pos.is_exit = FALSE;
+        """
+            )
+        )
+
+        filled_positions = [
+            {
+                "product_id": row[0],
+                "product_name": row[1],
+                "product_description": row[2],
+                "product_price": row[3],
+                "peso": row[4],
+                "size": row[5],
+                "position_x": row[6],
+                "position_y": row[7],
+            }
+            for row in result_filled_positions
+        ]
+
+        # Query for all empty positions.
+        result_empty_positions = connection.execute(
+            text(
+                """
+            SELECT 
+                NULL AS product_id,
+                NULL AS product_name,
+                NULL AS product_description,
+                NULL AS product_price,
+                NULL AS peso,
+                NULL AS size,
+                pos.position_x,
+                pos.position_y
+            FROM 
+                position pos
+            WHERE 
+                pos.product_id IS NULL AND 
+                pos.is_exit = FALSE;
+        """
+            )
+        )
+
+        empty_positions = [
+            {
+                "product_id": row[0],
+                "product_name": row[1],
+                "product_description": row[2],
+                "product_price": row[3],
+                "peso": row[4],
+                "size": row[5],
+                "position_x": row[6],
+                "position_y": row[7],
+            }
+            for row in result_empty_positions
+        ]
+
+    return {"products": filled_positions, "available_positions": empty_positions}

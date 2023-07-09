@@ -4,6 +4,8 @@ CREATE TYPE order_status_type as ENUM (
     'created', 'pending', 'paid', 'separation', 'delivered', 'canceled'
 );
 
+CREATE TYPE product_size_enum AS ENUM ('P', 'M', 'G');
+
 CREATE TYPE payment_status_type as ENUM ('pending', 'paid', 'canceled');
 
 CREATE TABLE users (
@@ -25,6 +27,8 @@ CREATE TABLE product (
     product_price DECIMAL(10,2),
     modified_by INTEGER,
     modified_at TIMESTAMP,
+    peso DECIMAL(8,2),
+    size product_size_enum,
     FOREIGN KEY (modified_by) REFERENCES users(user_id)
 );
 
@@ -56,13 +60,15 @@ CREATE TABLE payment (
 );
 
 CREATE TABLE position (
-    position_id SERIAL PRIMARY KEY,
     position_x INTEGER,
     position_y INTEGER,
     product_id INTEGER,
     product_amount INTEGER,
     modified_by INTEGER,
     modified_at TIMESTAMP,
+    is_exit BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (position_x, position_y),
     FOREIGN KEY (modified_by) REFERENCES users(user_id),
-    FOREIGN KEY (product_id) REFERENCES product(product_id)
+    FOREIGN KEY (product_id) REFERENCES product(product_id),
+    CONSTRAINT no_product_on_exit CHECK ((is_exit = FALSE) OR (is_exit = TRUE AND product_id IS NULL))
 );

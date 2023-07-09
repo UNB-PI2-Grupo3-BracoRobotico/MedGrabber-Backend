@@ -1,0 +1,1 @@
+SELECT initialize_positions();

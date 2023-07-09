@@ -49,6 +49,8 @@ class Product(Base):
     modified_by_username = Column(String(50), ForeignKey("users.username"))
     modified_at = Column(DateTime)
     user = relationship("User", backref="products")
+    weight = Column(Numeric(10, 2))
+    size = Column(ENUM("P", "M", "G"))
 
 
 class Order(Base):
