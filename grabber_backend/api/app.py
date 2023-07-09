@@ -35,10 +35,16 @@ else:
     exit(1)
 
 
+class OrderItem(BaseModel):
+    product_id: int
+    amount: int
+    price: float
+
+
 class Order(BaseModel):
     id: Optional[int]
     user: str
-    order_items: list
+    order_items: List[OrderItem]
     total_price: float
     payment_method: str
 
