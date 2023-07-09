@@ -45,3 +45,33 @@ BEGIN
     END IF;
 END; $$
 LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION insert_position(
+    p_position_id INTEGER,
+    p_position_x INTEGER,
+    p_position_y INTEGER,
+    p_product_id INTEGER,
+    p_product_amount INTEGER,
+    p_modified_by_username VARCHAR(50)
+) RETURNS VOID AS $$
+BEGIN
+    
+    IF EXISTS (SELECT 1 FROM position WHERE position_id = p_position_id) THEN
+        
+        UPDATE position
+        SET position_x = p_position_x,
+            position_y = p_position_y,
+            product_id = p_product_id,
+            product_amount = p_product_amount,
+            modified_by_username = p_modified_by_username,
+            modified_at = CURRENT_TIMESTAMP
+        WHERE position_id = p_position_id;
+    ELSE
+        
+        INSERT INTO position (position_id, position_x, position_y, product_id, product_amount, modified_by_username, modified_at)
+        VALUES (p_position_id, p_position_x, p_position_y, p_product_id, p_product_amount, p_modified_by_username, CURRENT_TIMESTAMP);
+    END IF;
+    
+    COMMIT;
+END;
+$$ LANGUAGE plpgsql;

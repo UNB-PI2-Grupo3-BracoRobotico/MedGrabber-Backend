@@ -4,6 +4,8 @@ CREATE TYPE order_status_type as ENUM (
     'created', 'pending', 'paid', 'separation', 'delivered', 'canceled'
 );
 
+CREATE TYPE product_size_enum AS ENUM ('P', 'M', 'G');
+
 CREATE TYPE payment_status_type as ENUM ('pending', 'paid', 'canceled');
 
 CREATE TABLE users (
@@ -25,6 +27,8 @@ CREATE TABLE product (
     product_price DECIMAL(10,2),
     modified_by INTEGER,
     modified_at TIMESTAMP,
+    peso DECIMAL(8,2),
+    size product_size_enum,
     FOREIGN KEY (modified_by) REFERENCES users(user_id)
 );
 
