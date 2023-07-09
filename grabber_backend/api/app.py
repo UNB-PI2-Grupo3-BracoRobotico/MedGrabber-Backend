@@ -73,6 +73,105 @@ async def create_order(order: Order, background_tasks: BackgroundTasks):
     return {"status": "Order sent"}
 
 
+@app.get("/orders/")
+async def get_orders():
+    # TODO: Implement actual database query
+    return {
+        "orders": [
+            {
+                "id": 1,
+                "user": "bobross",
+                "order_items": [
+                    {
+                        "id": 1,
+                        "name": "Caixa de Papelão",
+                        "price": 10.0,
+                        "quantity": 2,
+                        "position_x": 0,
+                        "position_y": 1,
+                        "size": "M",
+                        "weight": 0.5,
+                    },
+                    {
+                        "id": 2,
+                        "name": "Livro: Python for Dummies",
+                        "price": 20.0,
+                        "quantity": 1,
+                        "position_x": 0,
+                        "position_y": 0,
+                        "size": "M",
+                        "weight": 0.3,
+                    },
+                ],
+                "total_price": 40.0,
+                "payment_method": "pix",
+                "status": "pending",
+                "date": 1688922791,
+            },
+            {
+                "id": 2,
+                "user": "johndoe",
+                "order_items": [
+                    {
+                        "id": 3,
+                        "name": "Controle Logitech",
+                        "price": 30.0,
+                        "quantity": 1,
+                        "position_x": 1,
+                        "position_y": 0,
+                        "size": "P",
+                        "weight": 0.2,
+                    },
+                    {
+                        "id": 4,
+                        "name": "Mouse Bluetooth",
+                        "price": 40.0,
+                        "quantity": 3,
+                        "position_x": 0,
+                        "position_y": 1,
+                        "size": "M",
+                        "weight": 0.3,
+                    },
+                ],
+                "total_price": 150.0,
+                "payment_method": "pix",
+                "status": "delivered",
+                "date": 1594314791,
+            },
+            {
+                "id": 2,
+                "user": "johndoe",
+                "order_items": [
+                    {
+                        "id": 5,
+                        "name": "Licor Baileys",
+                        "price": 100.0,
+                        "quantity": 6,
+                        "position_x": 0,
+                        "position_y": 2,
+                        "size": "G",
+                        "weight": 1.0,
+                    },
+                    {
+                        "id": 4,
+                        "name": "Mouse Bluetooth",
+                        "price": 40.0,
+                        "quantity": 1,
+                        "position_x": 2,
+                        "position_y": 2,
+                        "size": "P",
+                        "weight": 0.3,
+                    },
+                ],
+                "total_price": 640.0,
+                "payment_method": "pix",
+                "status": "delivered",
+                "date": 1594833191,
+            },
+        ]
+    }
+
+
 @app.post("/users/")
 async def create_user(user: User):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
@@ -115,3 +214,84 @@ async def update_user(username: str, user: User):
         db_handler.close_session(session)
 
     return {"status": "User update request sent"}
+
+
+@app.get("/storage/")
+async def get_storage():
+    return {
+        "storage": [
+            {
+                "id": 1,
+                "name": "Caixa de Papelão",
+                "description": "Caixa de papelão para transporte de objetos",
+                "price": 10.0,
+                "quantity": 10,
+                "position_x": 0,
+                "position_y": 0,
+                "size": "M",
+                "weight": 0.5,
+            },
+            {
+                "id": 2,
+                "name": "Livro: Python for Dummies",
+                "description": "Livro de Python para iniciantes",
+                "price": 20.0,
+                "quantity": 5,
+                "position_x": 0,
+                "position_y": 1,
+                "size": "M",
+                "weight": 0.3,
+            },
+            {
+                "id": 3,
+                "name": "Controle Logitech",
+                "description": "Controle de submarino",
+                "price": 30.0,
+                "quantity": 2,
+                "position_x": 1,
+                "position_y": 0,
+                "size": "P",
+                "weight": 0.2,
+            },
+            {
+                "id": 4,
+                "name": "Mouse Bluetooth",
+                "description": "Mouse sem fio",
+                "price": 40.0,
+                "quantity": 10,
+                "position_x": 1,
+                "position_y": 1,
+                "size": "M",
+                "weight": 0.1,
+            },
+            {
+                "id": 5,
+                "name": "Licor Baileys",
+                "description": "Licor de chocolate",
+                "price": 100.0,
+                "quantity": 10,
+                "position_x": 2,
+                "position_y": 0,
+                "size": "G",
+                "weight": 1.0,
+            },
+        ],
+        "available_positions": [
+            {
+                "position_x": 2,
+                "position_y": 2,
+            },
+            {
+                "position_x": 2,
+                "position_y": 1,
+            },
+            {
+                "position_x": 1,
+                "position_y": 2,
+            },
+            {
+                "position_x": 0,
+                "position_y": 2,
+            },
+        ],
+    }
