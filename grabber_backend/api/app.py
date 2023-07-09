@@ -82,20 +82,29 @@ async def get_orders():
                 "id": 1,
                 "user": "bobross",
                 "order_items": [
-                    {"id": 1, "name": "Caixa de Papelão", "price": 10.0, "quantity": 2, "position_x": 0, "position_y": 1, "size": "M"},
+                    {
+                        "id": 1,
+                        "name": "Caixa de Papelão",
+                        "price": 10.0,
+                        "quantity": 2,
+                        "position_x": 0,
+                        "position_y": 1,
+                        "size": "M",
+                    },
                     {
                         "id": 2,
                         "name": "Livro: Python for Dummies",
                         "price": 20.0,
                         "quantity": 1,
-                        "position_x": 0, "position_y": 0,
-                        "size": "M"
+                        "position_x": 0,
+                        "position_y": 0,
+                        "size": "M",
                     },
                 ],
                 "total_price": 40.0,
                 "payment_method": "pix",
                 "status": "pending",
-                "date": 1688922791
+                "date": 1688922791,
             },
             {
                 "id": 2,
@@ -106,26 +115,52 @@ async def get_orders():
                         "name": "Controle Logitech",
                         "price": 30.0,
                         "quantity": 1,
-                        "position_x": 1, "position_y": 0, "size": "P"
+                        "position_x": 1,
+                        "position_y": 0,
+                        "size": "P",
                     },
-                    {"id": 4, "name": "Mouse Bluetooth", "price": 40.0, "quantity": 3, "position_x": 0, "position_y": 1, "size": "M"},
+                    {
+                        "id": 4,
+                        "name": "Mouse Bluetooth",
+                        "price": 40.0,
+                        "quantity": 3,
+                        "position_x": 0,
+                        "position_y": 1,
+                        "size": "M",
+                    },
                 ],
                 "total_price": 150.0,
                 "payment_method": "pix",
                 "status": "delivered",
-                "date": 1594314791
+                "date": 1594314791,
             },
             {
                 "id": 2,
                 "user": "johndoe",
                 "order_items": [
-                    {"id": 5, "name": "Licor Baileys", "price": 100.0, "quantity": 6, "position_x": 0, "position_y": 2, "size": "G"},
-                    {"id": 4, "name": "Mouse Bluetooth", "price": 40.0, "quantity": 1, "position_x": 2, "position_y": 2, "size": "P"},
+                    {
+                        "id": 5,
+                        "name": "Licor Baileys",
+                        "price": 100.0,
+                        "quantity": 6,
+                        "position_x": 0,
+                        "position_y": 2,
+                        "size": "G",
+                    },
+                    {
+                        "id": 4,
+                        "name": "Mouse Bluetooth",
+                        "price": 40.0,
+                        "quantity": 1,
+                        "position_x": 2,
+                        "position_y": 2,
+                        "size": "P",
+                    },
                 ],
                 "total_price": 640.0,
                 "payment_method": "pix",
                 "status": "delivered",
-                "date": 1594833191
+                "date": 1594833191,
             },
         ]
     }
@@ -175,17 +210,6 @@ async def update_user(username: str, user: User):
     return {"status": "User update request sent"}
 
 
-@app.get("/users/")
-async def get_users_list():
-    # TODO: Implement actual database query
-    return {
-        "users": [
-            {"username": "bobross", "email": "bobloco@painting.com"},
-            {"username": "johndoe", "email": "darkevil@provider.com"},
-        ]
-    }
-
-
 @app.get("/storage/")
 async def get_storage():
     return {
@@ -198,6 +222,8 @@ async def get_storage():
                 "quantity": 10,
                 "position_x": 0,
                 "position_y": 0,
+                "size": "M",
+                "weight": 0.5,
             },
             {
                 "id": 2,
@@ -207,6 +233,8 @@ async def get_storage():
                 "quantity": 5,
                 "position_x": 0,
                 "position_y": 1,
+                "size": "M",
+                "weight": 0.3,
             },
             {
                 "id": 3,
@@ -216,6 +244,8 @@ async def get_storage():
                 "quantity": 2,
                 "position_x": 1,
                 "position_y": 0,
+                "size": "P",
+                "weight": 0.2,
             },
             {
                 "id": 4,
@@ -225,6 +255,8 @@ async def get_storage():
                 "quantity": 10,
                 "position_x": 1,
                 "position_y": 1,
+                "size": "M",
+                "weight": 0.1,
             },
             {
                 "id": 5,
@@ -234,6 +266,8 @@ async def get_storage():
                 "quantity": 10,
                 "position_x": 2,
                 "position_y": 0,
+                "size": "G",
+                "weight": 1.0,
             },
         ],
         "available_positions": [
