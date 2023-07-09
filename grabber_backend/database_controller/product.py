@@ -17,7 +17,9 @@ class ProductDatabaseHandler:
         try:
             logger.info(f"Inserting product: {product.product_name}")
 
-            session.execute(text("""
+            session.execute(
+                text(
+                    """
                 SELECT create_product_and_position(
                     :product_name,
                     :product_description,
@@ -29,7 +31,10 @@ class ProductDatabaseHandler:
                     :position_y,
                     :product_amount
                 );
-            """), params=product.dict())
+            """
+                ),
+                params=product.dict(),
+            )
 
             session.commit()
 

@@ -63,7 +63,7 @@ class ProductPosition(BaseModel):
     position_x: int
     position_y: int
     product_amount: int
-    
+
 
 app = FastAPI()
 
