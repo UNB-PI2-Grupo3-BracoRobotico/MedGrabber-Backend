@@ -93,6 +93,7 @@ async def get_orders():
                 "total_price": 40.0,
                 "payment_method": "pix",
                 "status": "pending",
+                "date": 1688922791
             },
             {
                 "id": 2,
@@ -109,6 +110,7 @@ async def get_orders():
                 "total_price": 150.0,
                 "payment_method": "pix",
                 "status": "delivered",
+                "date": 1594314791
             },
             {
                 "id": 2,
@@ -120,6 +122,7 @@ async def get_orders():
                 "total_price": 640.0,
                 "payment_method": "pix",
                 "status": "delivered",
+                "date": 1594833191
             },
         ]
     }
