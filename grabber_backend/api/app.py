@@ -13,7 +13,6 @@ from grabber_backend.database_controller.user import UserDatabaseHandler
 from grabber_backend.database_controller.models import User
 from grabber_backend.database_controller.product import ProductDatabaseHandler
 from grabber_backend.database_controller.models import Product, Position
-from grabber_backend.database_controller.position import PositionDatabaseHandler
 
 
 logger = logging.getLogger(__name__)
@@ -54,26 +53,17 @@ class User(BaseModel):
     user_role: str
 
 
-class Product(BaseModel):
-    product_id: Optional[int]
+class ProductPosition(BaseModel):
     product_name: str
     product_description: str
     product_price: float
-    modified_by_username: str
-    modified_at: str
-    position: Position
-    weight: float
+    peso: float
     size: str
-
-
-class Position(BaseModel):
-    position_id: Optional[int]
+    modified_by_username: str
     position_x: int
     position_y: int
-    product_id: int
     product_amount: int
-    modified_by_username: str
-
+    
 
 app = FastAPI()
 
@@ -321,105 +311,13 @@ async def get_storage():
     }
 
 
-@app.get("/storage/")
-async def get_storage():
-    return {
-        "storage": [
-            {
-                "id": 1,
-                "name": "Caixa de Papelão",
-                "description": "Caixa de papelão para transporte de objetos",
-                "price": 10.0,
-                "quantity": 10,
-                "position_x": 0,
-                "position_y": 0,
-                "size": "M",
-                "weight": 0.5,
-            },
-            {
-                "id": 2,
-                "name": "Livro: Python for Dummies",
-                "description": "Livro de Python para iniciantes",
-                "price": 20.0,
-                "quantity": 5,
-                "position_x": 0,
-                "position_y": 1,
-                "size": "M",
-                "weight": 0.3,
-            },
-            {
-                "id": 3,
-                "name": "Controle Logitech",
-                "description": "Controle de submarino",
-                "price": 30.0,
-                "quantity": 2,
-                "position_x": 1,
-                "position_y": 0,
-                "size": "P",
-                "weight": 0.2,
-            },
-            {
-                "id": 4,
-                "name": "Mouse Bluetooth",
-                "description": "Mouse sem fio",
-                "price": 40.0,
-                "quantity": 10,
-                "position_x": 1,
-                "position_y": 1,
-                "size": "M",
-                "weight": 0.1,
-            },
-            {
-                "id": 5,
-                "name": "Licor Baileys",
-                "description": "Licor de chocolate",
-                "price": 100.0,
-                "quantity": 10,
-                "position_x": 2,
-                "position_y": 0,
-                "size": "G",
-                "weight": 1.0,
-            },
-        ],
-        "available_positions": [
-            {
-                "position_x": 2,
-                "position_y": 2,
-            },
-            {
-                "position_x": 2,
-                "position_y": 1,
-            },
-            {
-                "position_x": 1,
-                "position_y": 2,
-            },
-            {
-                "position_x": 0,
-                "position_y": 2,
-            },
-        ],
-    }
-
-
 @app.post("/products/")
-async def create_product(product: Product):
+async def create_product(product: ProductPosition):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
     logger.info(f"Creating product: {product}")
     try:
         session = db_handler.create_session()
         product_db_handler = ProductDatabaseHandler(session)
-
-        position_db_handler = PositionDatabaseHandler(session)
-        position = Position(
-            position_x=product.position.position_x,
-            position_y=product.position.position_y,
-            product_amount=1,
-            modified_by_username=product.modified_by_username,
-        )
-        status = position_db_handler.insert_position(position)
-
-        product.position = position
 
         status = product_db_handler.insert_product(product)
         logger.info(f"Product created: {product}")
@@ -434,72 +332,3 @@ async def create_product(product: Product):
 
     logger.info(f"Sending response back to client")
     return {"status": f"{status}"}
-
-
-@app.put("/products/{product_id}")
-async def update_product(product_id: int, product: Product):
-    product.product_id = product_id
-    logger.info(f"Updating product: {product}")
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-
-    try:
-        logger.info(f"Creating database session")
-        session = db_handler.create_session()
-        product_db_handler = ProductDatabaseHandler(session)
-        product_db_handler.update_product(product)
-
-    except Exception as e:
-        logger.error(f"Failed to update product: {e}")
-        return {"status": "Failed to update product"}, 500
-
-    finally:
-        db_handler.close_session(session)
-
-    return {"status": "Product update request sent"}
-
-
-@app.post("/positions/")
-async def create_position(position: Position):
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-    logger.info(f"Creating position: {position}")
-
-    try:
-        session = db_handler.create_session()
-        position_db_handler = PositionDatabaseHandler(session)
-        status = position_db_handler.insert_position(position)
-        logger.info(f"Position created: {position}")
-
-    except Exception as e:
-        logger.error(f"Failed to create position: {e}")
-        return {"status": "Failed to create position"}, 500
-
-    finally:
-        logger.info(f"Closing database session")
-        db_handler.close_session(session)
-
-    logger.info(f"Sending response back to client")
-    return {"status": status}
-
-
-@app.put("/positions/{position_id}")
-async def update_position(position_id: int, position: Position):
-    position.position_id = position_id
-    logger.info(f"Updating position: {position}")
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-
-    try:
-        session = db_handler.create_session()
-        position_db_handler = PositionDatabaseHandler(session)
-        status = position_db_handler.update_position(position)
-        logger.info(f"Position updated: {position}")
-
-    except Exception as e:
-        logger.error(f"Failed to update position: {e}")
-        return {"status": "Failed to update position"}, 500
-
-    finally:
-        logger.info(f"Closing database session")
-        db_handler.close_session(session)
-
-    logger.info(f"Sending response back to client")
-    return {"status": status}

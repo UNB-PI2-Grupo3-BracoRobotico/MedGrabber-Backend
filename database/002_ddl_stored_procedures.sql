@@ -47,31 +47,102 @@ END; $$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION insert_position(
-    p_position_id INTEGER,
     p_position_x INTEGER,
     p_position_y INTEGER,
     p_product_id INTEGER,
     p_product_amount INTEGER,
-    p_modified_by_username VARCHAR(50)
+    p_modified_by_username VARCHAR(50),
+    p_is_exit BOOLEAN DEFAULT FALSE
 ) RETURNS VOID AS $$
+DECLARE
+    v_modified_by_id INTEGER;
 BEGIN
-    
-    IF EXISTS (SELECT 1 FROM position WHERE position_id = p_position_id) THEN
-        
-        UPDATE position
-        SET position_x = p_position_x,
-            position_y = p_position_y,
-            product_id = p_product_id,
-            product_amount = p_product_amount,
-            modified_by_username = p_modified_by_username,
-            modified_at = CURRENT_TIMESTAMP
-        WHERE position_id = p_position_id;
-    ELSE
-        
-        INSERT INTO position (position_id, position_x, position_y, product_id, product_amount, modified_by_username, modified_at)
-        VALUES (p_position_id, p_position_x, p_position_y, p_product_id, p_product_amount, p_modified_by_username, CURRENT_TIMESTAMP);
+
+    SELECT user_id INTO v_modified_by_id FROM users WHERE username = p_modified_by_username;
+
+    IF v_modified_by_id IS NULL THEN
+        RAISE 'User % not found', p_modified_by_username;
     END IF;
-    
+
+    IF p_is_exit AND p_product_id IS NOT NULL THEN
+        RAISE 'Cannot add product to an exit position';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM position WHERE position_x = p_position_x AND position_y = p_position_y) THEN
+        UPDATE position
+        SET product_id = p_product_id,
+            product_amount = p_product_amount,
+            modified_by = v_modified_by_id,
+            modified_at = CURRENT_TIMESTAMP,
+            is_exit = p_is_exit
+        WHERE position_x = p_position_x AND position_y = p_position_y;
+    ELSE
+        INSERT INTO position (position_x, position_y, product_id, product_amount, modified_by, modified_at, is_exit)
+        VALUES (p_position_x, p_position_y, p_product_id, p_product_amount, v_modified_by_id, CURRENT_TIMESTAMP, p_is_exit);
+    END IF;
+
     COMMIT;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION initialize_positions() RETURNS VOID AS $$
+DECLARE
+    v_position_x INTEGER;
+    v_position_y INTEGER;
+BEGIN
+    FOR v_position_x IN 1..5 LOOP
+        FOR v_position_y IN 1..5 LOOP
+            INSERT INTO position (position_x, position_y, is_exit)
+            VALUES (v_position_x, v_position_y, FALSE)
+            ON CONFLICT (position_x, position_y) DO NOTHING;
+        END LOOP;
+    END LOOP;
+    -- Set a position as an exit point
+    UPDATE position SET is_exit = TRUE WHERE position_x = 5 AND position_y = 5;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'Failed to initialize positions: %', SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION create_product_and_position(
+    p_product_name VARCHAR(50),
+    p_product_description VARCHAR(300),
+    p_product_price DECIMAL(10,2),
+    p_peso DECIMAL(8,2),
+    p_size product_size_enum,
+    p_modified_by_username VARCHAR(50),
+    p_position_x INTEGER,
+    p_position_y INTEGER,
+    p_product_amount INTEGER
+) RETURNS VOID AS $$
+DECLARE
+    v_user_id INTEGER;
+    v_product_id INTEGER;
+BEGIN
+    SELECT user_id INTO v_user_id FROM users WHERE username = p_modified_by_username;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'User not found';
+    END IF;
+
+    INSERT INTO product (product_name, product_description, product_price, peso, size, modified_by, modified_at)
+    VALUES (p_product_name, p_product_description, p_product_price, p_peso, p_size, v_user_id, CURRENT_TIMESTAMP)
+    RETURNING product_id INTO v_product_id;
+
+    UPDATE position
+    SET product_id = v_product_id,
+        product_amount = p_product_amount,
+        modified_by = v_user_id,
+        modified_at = CURRENT_TIMESTAMP
+    WHERE position_x = p_position_x AND position_y = p_position_y AND is_exit = FALSE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Position not found or is an exit';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'Failed to insert product: % - %', p_product_name, SQLERRM;
 END;
 $$ LANGUAGE plpgsql;
