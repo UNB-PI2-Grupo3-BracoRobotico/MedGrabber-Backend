@@ -184,44 +184,14 @@ BEGIN
         RAISE EXCEPTION 'Product not found';
     END IF;
 
-    -- Check if the new position is different from the current position
-    IF p_new_position_x <> p_position_x OR p_new_position_y <> p_position_y THEN
-        -- Verify if the new position is available and not an exit position
-        IF EXISTS (
-            SELECT 1
-            FROM position
-            WHERE position_x = p_new_position_x
-                AND position_y = p_new_position_y
-                AND is_exit = FALSE
-        ) THEN
-            UPDATE position
-            SET
-                product_amount = p_product_amount,
-                modified_by = v_user_id,
-                modified_at = CURRENT_TIMESTAMP,
-                position_x = p_new_position_x,
-                position_y = p_new_position_y
-            WHERE
-                product_id = p_product_id
-                AND position_x = p_position_x
-                AND position_y = p_position_y
-                AND is_exit = FALSE;
-        ELSE
-            RAISE EXCEPTION 'New position not available or is an exit';
-        END IF;
-    ELSE
-        -- New position is the same, no need to update
-        UPDATE position
-        SET
-            product_amount = p_product_amount,
-            modified_by = v_user_id,
-            modified_at = CURRENT_TIMESTAMP
-        WHERE
-            product_id = p_product_id
-            AND position_x = p_position_x
-            AND position_y = p_position_y
-            AND is_exit = FALSE;
-    END IF;
+    UPDATE position
+    SET product_amount = p_product_amount,
+        modified_by = v_user_id,
+        modified_at = CURRENT_TIMESTAMP
+        position_x = p_position_x
+        position_y = p_position_y
+    WHERE product_id = p_product_id
+        AND is_exit = FALSE;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Position not found or is an exit';
