@@ -146,3 +146,88 @@ EXCEPTION
         RAISE EXCEPTION 'Failed to insert product: % - %', p_product_name, SQLERRM;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION update_product_and_position(
+    p_product_id INTEGER,
+    p_product_name VARCHAR(50),
+    p_product_description VARCHAR(300),
+    p_product_price DECIMAL(10,2),
+    p_peso DECIMAL(8,2),
+    p_size product_size_enum,
+    p_modified_by_username VARCHAR(50),
+    p_position_x INTEGER,
+    p_position_y INTEGER,
+    p_product_amount INTEGER
+) RETURNS VOID AS $$
+DECLARE
+    v_user_id INTEGER;
+BEGIN
+    SELECT user_id INTO v_user_id FROM users WHERE username = p_modified_by_username;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'User not found';
+    END IF;
+
+    UPDATE product
+    SET
+        product_name = p_product_name,
+        product_description = p_product_description,
+        product_price = p_product_price,
+        peso = p_peso,
+        size = p_size,
+        modified_by = v_user_id,
+        modified_at = CURRENT_TIMESTAMP
+    WHERE
+        product_id = p_product_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Product not found';
+    END IF;
+
+    -- Check if the new position is different from the current position
+    IF p_new_position_x <> p_position_x OR p_new_position_y <> p_position_y THEN
+        -- Verify if the new position is available and not an exit position
+        IF EXISTS (
+            SELECT 1
+            FROM position
+            WHERE position_x = p_new_position_x
+                AND position_y = p_new_position_y
+                AND is_exit = FALSE
+        ) THEN
+            UPDATE position
+            SET
+                product_amount = p_product_amount,
+                modified_by = v_user_id,
+                modified_at = CURRENT_TIMESTAMP,
+                position_x = p_new_position_x,
+                position_y = p_new_position_y
+            WHERE
+                product_id = p_product_id
+                AND position_x = p_position_x
+                AND position_y = p_position_y
+                AND is_exit = FALSE;
+        ELSE
+            RAISE EXCEPTION 'New position not available or is an exit';
+        END IF;
+    ELSE
+        -- New position is the same, no need to update
+        UPDATE position
+        SET
+            product_amount = p_product_amount,
+            modified_by = v_user_id,
+            modified_at = CURRENT_TIMESTAMP
+        WHERE
+            product_id = p_product_id
+            AND position_x = p_position_x
+            AND position_y = p_position_y
+            AND is_exit = FALSE;
+    END IF;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Position not found or is an exit';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'Failed to update product: % - %', p_product_id, SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
