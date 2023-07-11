@@ -2,7 +2,7 @@ from time import sleep
 from typing import Optional, List
 import logging
 
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, HTTPException, status
 from pydantic import BaseModel
 from confluent_kafka import Producer
 from sqlalchemy import text
@@ -45,13 +45,18 @@ class Order(BaseModel):
 
 
 class User(BaseModel):
+    # TODO: add firebase uid as a param here
+    # TODO: Remove username
     username: str
+    # TODO: backend should receive raw password and hash it - Add has method at endpoint
     password_hash: str
     email: str
     store_name: str
+    # TODO: Remove personal name
     personal_name: str
     machine_serial_number: str
     phone_number: str
+    # TODO: Remove user role
     user_role: str
 
 
@@ -195,7 +200,7 @@ async def get_orders():
     }
 
 
-@app.post("/users/")
+@app.post("/users/", status_code=status.HTTP_201_CREATED)
 async def create_user(user: User):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
     logger.info(f"Creating user: {user}")
@@ -214,7 +219,9 @@ async def create_user(user: User):
         db_handler.close_session(session)
 
     logger.info(f"Sending response back to client")
-    return {"status": f"{status}"}
+    if (status == 'failed'):
+        raise HTTPException(status_code=409, detail="user creation failed")
+    return {"message": "user created"}
 
 
 @app.put("/users/{username}")
