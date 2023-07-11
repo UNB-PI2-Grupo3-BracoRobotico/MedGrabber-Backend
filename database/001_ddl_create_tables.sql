@@ -10,25 +10,20 @@ CREATE TYPE order_status_type as ENUM (
 CREATE TYPE product_size_enum AS ENUM ('P', 'M', 'G');
 CREATE TYPE payment_status_type as ENUM ('pending', 'paid', 'canceled');
 CREATE TABLE users (
-    -- TODO: user_id is a Varchar(128) provided by the frontend - it is provided via the firebase
-    user_id SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
+    user_id VARCHAR(128) PRIMARY KEY,
     password_hash VARCHAR(50) NOT NULL,
-    -- Email must be unique
-    email VARCHAR(50),
+    email VARCHAR(50) UNIQUE,
     store_name VARCHAR(50),
-    personal_name VARCHAR(50) NOT NULL,
-    -- Machine serial number must be unique
-    machine_serial_number VARCHAR(50),
-    phone_number VARCHAR(50) UNIQUE,
-    user_role user_role_type
+    machine_serial_number VARCHAR(50) UNIQUE,
+    phone_number VARCHAR(50) UNIQUE
 );
+
 CREATE TABLE product (
     product_id SERIAL PRIMARY KEY,
     product_name VARCHAR(50),
     product_description VARCHAR(300),
     product_price DECIMAL(10, 2),
-    modified_by INTEGER,
+    modified_by VARCHAR(128),
     modified_at TIMESTAMP,
     peso DECIMAL(8, 2),
     size product_size_enum,
@@ -36,7 +31,7 @@ CREATE TABLE product (
 );
 CREATE TABLE customer_order (
     customer_order_id SERIAL PRIMARY KEY,
-    user_id INTEGER,
+    user_id VARCHAR(128),
     order_date DATE,
     total_cost DECIMAL(10, 2),
     order_status order_status_type,
@@ -63,7 +58,7 @@ CREATE TABLE position (
     position_y INTEGER,
     product_id INTEGER,
     product_amount INTEGER,
-    modified_by INTEGER,
+    modified_by VARCHAR(128),
     modified_at TIMESTAMP,
     is_exit BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (position_x, position_y),
