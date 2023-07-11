@@ -22,6 +22,7 @@ class UserDatabaseHandler:
 
             session.execute(
                 text(
+                    # TODO: user_id should be added to parts to insert here
                     "INSERT INTO users (username, password_hash, email, store_name, personal_name, machine_serial_number, phone_number, user_role) "
                     "VALUES (:username, :password_hash, :email, :store_name, :personal_name, :machine_serial_number, :phone_number, :user_role)"
                 ),
