@@ -29,8 +29,7 @@ for retry in range(MAX_RETRIES):
         producer = Producer(conf)
         break
     except Exception as e:
-        logger.error(
-            f"Failed to start Kafka producer: {e}, trying again... {retry}")
+        logger.error(f"Failed to start Kafka producer: {e}, trying again... {retry}")
 else:
     logger.error("Failed to start Kafka producer, exiting...")
     exit(1)
@@ -212,9 +211,10 @@ async def create_user(user: User):
         db_handler.close_session(session)
 
     logger.info(f"Sending response back to client")
-    if (status == 'failed'):
+    if status == "failed":
         raise HTTPException(status_code=409, detail="user creation failed")
     return {"message": "user created"}
+
 
 # TODO - This has to be a patch request
 # TODO - Instead of username we must pass the uid from the user
@@ -254,7 +254,9 @@ async def create_product(product: ProductPosition):
 
     except Exception as e:
         logger.error(f"Failed to create/update product: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to create/update product - {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create/update product - {e}"
+        )
 
     finally:
         logger.info(f"Closing database session")

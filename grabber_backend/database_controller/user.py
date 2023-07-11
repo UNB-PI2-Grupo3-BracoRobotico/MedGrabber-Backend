@@ -23,7 +23,7 @@ class UserDatabaseHandler:
 
             sha256_hash = hashlib.sha256()
 
-            sha256_hash.update(user.password.encode('utf-8'))
+            sha256_hash.update(user.password.encode("utf-8"))
 
             hashed_password = sha256_hash.hexdigest()
 
