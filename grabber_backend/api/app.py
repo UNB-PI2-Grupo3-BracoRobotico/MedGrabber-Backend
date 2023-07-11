@@ -88,6 +88,7 @@ def produce_message(order: Order):
     producer.flush()
 
 
+# TODO backgrounf_tasks is a param i need to pass?
 @app.post("/orders/")
 async def create_order(order: Order, background_tasks: BackgroundTasks):
     background_tasks.add_task(produce_message, order)
@@ -212,6 +213,8 @@ async def create_user(user: User):
 
     except Exception as e:
         logger.error(f"Failed to create/update user: {e}")
+        # TODO - This return is wrong you're returning 200 as status code with a body
+        # thas has 500 - Use HTTPException to fix this
         return {"status": "Failed to create/update user"}, 500
 
     finally:
@@ -223,10 +226,14 @@ async def create_user(user: User):
         raise HTTPException(status_code=409, detail="user creation failed")
     return {"message": "user created"}
 
+# TODO - This has to be a patch request
+# TODO - Instead of username we must pass the uid from the user
+# TODO - We shouldn't pass the whole user to this endpoint just the properties we want to change
 
-@app.put("/users/{username}")
+
+@app.put("/users/{username}", status_code=204)
 async def update_user(username: str, user: User):
-    user.username = username
+    user.username = username  # this line is necessary?
     logger.info(f"Updating user: {user}")
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
 
@@ -234,16 +241,14 @@ async def update_user(username: str, user: User):
         logger.info(f"Creating database session")
         session = db_handler.create_session()
         user_db_handler = UserDatabaseHandler(session)
-        user_db_handler.upsert_user(user)
+        user_db_handler.update_user(user)
 
     except Exception as e:
         logger.error(f"Failed to update user: {e}")
-        return {"status": "Failed to update user"}, 500
+        raise HTTPException(status_code=500, detail="Failed to update user")
 
     finally:
         db_handler.close_session(session)
-
-    return {"status": "User update request sent"}
 
 
 @app.get("/storage/")
@@ -340,6 +345,9 @@ async def create_product(product: ProductPosition):
 
     except Exception as e:
         logger.error(f"Failed to create/update product: {e}")
+        # TODO - This return is wrong you're returning 200 as status code with a body
+        # thas has 500 - Use HTTPException to fix this
+        # Also 500 is not the only possible return is better to analyse what's gonna be returned
         return {"status": "Failed to create/update product"}, 500
 
     finally:
