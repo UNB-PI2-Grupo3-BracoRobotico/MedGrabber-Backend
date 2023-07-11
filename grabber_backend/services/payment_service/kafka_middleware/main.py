@@ -12,10 +12,6 @@ from grabber_backend.config.kafka import (
 )
 from grabber_backend.config.database import DATABASE_CONNECTION_STRING
 from grabber_backend.database_controller.database_handler import DatabaseHandler
-from grabber_backend.services.order_service.shopping_manager.order_creator import (
-    OrderCreator,
-)
-from grabber_backend.database_controller.models import OrderStatusEnum
 
 
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +21,7 @@ RETRY_COOLDOWN = 10
 
 
 class KafkaClient:
-    AGENT_NAME = "order_service"
+    AGENT_NAME = "payment_service"
 
     def __init__(self, bootstrap_servers):
         logging.info(f"Initializing {self.AGENT_NAME}...")
