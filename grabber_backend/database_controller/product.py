@@ -11,7 +11,7 @@ class ProductDatabaseHandler:
     def __init__(self, db_session):
         self.session = db_session
 
-    def insert_product(self, product):        
+    def insert_product(self, product):
         session = self.session
         status = ""
 
@@ -48,14 +48,14 @@ class ProductDatabaseHandler:
             status = "failed"
 
         return status
-    
+
     def delete_product(self, product_id):
         session = self.session
         status = ""
-        
+
         try:
             logger.info(f"Deleting product with ID: {product_id}")
-            
+
             session.execute(
                 text(
                     """
@@ -66,7 +66,7 @@ class ProductDatabaseHandler:
                 ),
                 {"product_id": product_id},
             )
-                        
+
             session.execute(
                 text(
                     """
@@ -87,7 +87,7 @@ class ProductDatabaseHandler:
             status = "failed"
 
         return status
-    
+
     def update_product(self, product_id, update_product):
         session = self.session
         status = ""
@@ -128,4 +128,3 @@ class ProductDatabaseHandler:
             status = "failed"
 
         return status
-

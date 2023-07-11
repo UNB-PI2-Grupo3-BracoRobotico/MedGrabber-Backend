@@ -335,7 +335,6 @@ async def create_product(product: ProductPosition):
     return {"status": f"{status}"}
 
 
-
 @app.delete("/products/{product_id}")
 async def delete_product(product_id: int):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
@@ -358,6 +357,7 @@ async def delete_product(product_id: int):
     logger.info(f"Sending response back to client")
     return {"status": f"{status}"}
 
+
 @app.put("/products/{product_id}")
 async def update_product(product_id: int, updated_product: ProductPosition):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
@@ -379,6 +379,7 @@ async def update_product(product_id: int, updated_product: ProductPosition):
 
     logger.info(f"Sending response back to client")
     return {"status": f"{status}"}
+
 
 class ProductPositionData(BaseModel):
     product_id: Optional[int]
