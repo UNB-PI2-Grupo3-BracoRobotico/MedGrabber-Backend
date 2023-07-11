@@ -10,6 +10,7 @@ CREATE TYPE order_status_type as ENUM (
 CREATE TYPE product_size_enum AS ENUM ('P', 'M', 'G');
 CREATE TYPE payment_status_type as ENUM ('pending', 'paid', 'canceled');
 CREATE TABLE users (
+    -- TODO: user_id is a Varchar(128) provided by the frontend - it is provided via the firebase
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
     password_hash VARCHAR(50) NOT NULL,
