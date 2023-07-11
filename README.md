@@ -17,16 +17,6 @@ docker compose up -d
 
 Este comando irá realizar a build e deixará disponível todos os containers da aplicação.
 
-## Configurando o kafka
-
-Após subir os microsserviços, é necessário criar os tópicos no servidor Kafka. Para isso, execute o comando:
-
-```sh
-make create-topics
-```
-
-Este comando irá criar os tópicos no servidor Kafka.
-
 # Execução
 
 ### 🚨 Tutorial KAFKA
