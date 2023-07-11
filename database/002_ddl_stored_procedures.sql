@@ -14,20 +14,19 @@ BEGIN
 END; $$
 LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION upsert_user(p_user_id VARCHAR, p_password_hash VARCHAR, p_email VARCHAR, p_store_name VARCHAR, p_machine_serial_number VARCHAR, p_phone_number VARCHAR)
+CREATE OR REPLACE FUNCTION upsert_user(p_user_id VARCHAR, p_email VARCHAR, p_store_name VARCHAR, p_machine_serial_number VARCHAR, p_phone_number VARCHAR)
 RETURNS VOID AS $$
 BEGIN
     IF EXISTS (SELECT 1 FROM users WHERE user_id = p_user_id) THEN
         UPDATE users SET
-            password_hash = p_password_hash,
             email = p_email,
             store_name = p_store_name,
             machine_serial_number = p_machine_serial_number,
             phone_number = p_phone_number
         WHERE user_id = p_user_id;
     ELSE
-        INSERT INTO users (user_id, password_hash, email, store_name, machine_serial_number, phone_number)
-        VALUES (p_user_id, p_password_hash, p_email, p_store_name, p_machine_serial_number, p_phone_number);
+        INSERT INTO users (user_id, email, store_name, machine_serial_number, phone_number)
+        VALUES (p_user_id, p_email, p_store_name, p_machine_serial_number, p_phone_number);
     END IF;
 END; $$
 LANGUAGE plpgsql;

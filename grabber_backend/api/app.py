@@ -45,7 +45,6 @@ class Order(BaseModel):
 
 class User(BaseModel):
     firebase_uid: str
-    password: str
     email: str
     store_name: str
     machine_serial_number: str
@@ -90,8 +89,8 @@ async def create_order(order: Order, background_tasks: BackgroundTasks):
 async def get_orders():
     # TODO: Implement actual database query
 
-    # TODO: Define possible status for order - Must be (awaiting payment, pending, processing, ready to get, finished)
-    # make them as they are here but in snake_case - (awaiting_payment, pending, processing, ready_to_get, finished)
+    # TODO: Define possible status for order - Must be (awaiting payment, pending, processing, ready to get, delivered)
+    # make them as they are here but in snake_case - (awaiting_payment, pending, processing, ready_to_get, delivered)
 
     # TODO: Insert proper dating format
 
@@ -155,7 +154,7 @@ async def get_orders():
                 ],
                 "total_price": 150.0,
                 "payment_method": "pix",
-                "status": "finished",
+                "status": "delivered",
                 "date": 1594314791,
             },
             {
@@ -241,7 +240,7 @@ async def update_user(username: str, user: User):
         db_handler.close_session(session)
 
 
-@app.post("/products/")
+@app.post("/products/", status_code=201)
 async def create_product(product: ProductPosition):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
     logger.info(f"Creating product: {product}")
