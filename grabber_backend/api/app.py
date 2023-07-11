@@ -29,7 +29,8 @@ for retry in range(MAX_RETRIES):
         producer = Producer(conf)
         break
     except Exception as e:
-        logger.error(f"Failed to start Kafka producer: {e}, trying again... {retry}")
+        logger.error(
+            f"Failed to start Kafka producer: {e}, trying again... {retry}")
 else:
     logger.error("Failed to start Kafka producer, exiting...")
     exit(1)
@@ -91,6 +92,13 @@ async def create_order(order: Order, background_tasks: BackgroundTasks):
 @app.get("/orders/")
 async def get_orders():
     # TODO: Implement actual database query
+
+    # TODO: Define possible status for order - Must be (awaiting payment, pending, processing, ready to get, finished)
+    # make them as they are here but in snake_case - (awaiting_payment, pending, processing, ready_to_get, finished)
+
+    # TODO: Insert proper dating format
+
+    # TODO: order_items are missing description
     return {
         "orders": [
             {
@@ -150,7 +158,7 @@ async def get_orders():
                 ],
                 "total_price": 150.0,
                 "payment_method": "pix",
-                "status": "delivered",
+                "status": "finished",
                 "date": 1594314791,
             },
             {
@@ -180,7 +188,7 @@ async def get_orders():
                 ],
                 "total_price": 640.0,
                 "payment_method": "pix",
-                "status": "delivered",
+                "status": "ready_to_get",
                 "date": 1594833191,
             },
         ]
