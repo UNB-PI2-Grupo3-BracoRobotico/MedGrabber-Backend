@@ -108,7 +108,7 @@ class KafkaClient:
 
     def proccess(self, topic, message):
         if topic == "create-order":
-            logger.info(message)
+            logging.info(message)
             user = message.get("user")
             order = message.get("order")
 
