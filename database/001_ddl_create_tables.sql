@@ -11,7 +11,7 @@ CREATE TYPE product_size_enum AS ENUM ('P', 'M', 'G');
 CREATE TYPE payment_status_type as ENUM ('pending', 'paid', 'canceled');
 CREATE TABLE users (
     user_id VARCHAR(128) PRIMARY KEY,
-    password_hash VARCHAR(50) NOT NULL,
+    password_hash VARCHAR(64) NOT NULL,
     email VARCHAR(50) UNIQUE,
     store_name VARCHAR(50),
     machine_serial_number VARCHAR(50) UNIQUE,

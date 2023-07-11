@@ -1,4 +1,5 @@
 import logging
+import hashlib
 
 from sqlalchemy import text
 
@@ -20,14 +21,20 @@ class UserDatabaseHandler:
         try:
             logger.info(f"Inserting user: {user.firebase_uid}")
 
+            sha256_hash = hashlib.sha256()
+
+            sha256_hash.update(user.password.encode('utf-8'))
+
+            hashed_password = sha256_hash.hexdigest()
+
             session.execute(
                 text(
-                    "INSERT INTO users (user_id, password_hash, email, store_name, personal_name, machine_serial_number, phone_number, user_role) "
-                    "VALUES (:user_id, :password_hash, :email, :store_name, :personal_name, :machine_serial_number, :phone_number, :user_role)"
+                    "INSERT INTO users (user_id, password_hash, email, store_name, machine_serial_number, phone_number) "
+                    "VALUES (:user_id, :password_hash, :email, :store_name, :machine_serial_number, :phone_number)"
                 ),
                 {
                     "user_id": user.firebase_uid,
-                    "password_hash": user.password_hash,
+                    "password_hash": hashed_password,
                     "email": user.email,
                     "store_name": user.store_name,
                     "machine_serial_number": user.machine_serial_number,
@@ -44,6 +51,8 @@ class UserDatabaseHandler:
             session.rollback()
 
             status = f"failed - {e}"
+
+            raise e
 
         return status
 
