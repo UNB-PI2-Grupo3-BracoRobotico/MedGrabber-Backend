@@ -121,10 +121,16 @@ CREATE OR REPLACE FUNCTION create_product_and_position(
 DECLARE
     v_user_id INTEGER;
     v_product_id INTEGER;
+    v_product_exists INTEGER;
 BEGIN
     SELECT user_id INTO v_user_id FROM users WHERE username = p_modified_by_username;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'User not found';
+    END IF;
+
+    SELECT product_id INTO v_product_exists FROM position WHERE position_x = p_position_x AND position_y = p_position_y AND is_exit = FALSE;
+    IF v_product_exists IS NOT NULL THEN
+        RAISE EXCEPTION 'Product already exists at the specified position';
     END IF;
 
     INSERT INTO product (product_name, product_description, product_price, peso, size, modified_by, modified_at)
@@ -146,6 +152,7 @@ EXCEPTION
         RAISE EXCEPTION 'Failed to insert product: % - %', p_product_name, SQLERRM;
 END;
 $$ LANGUAGE plpgsql;
+
 
 
 CREATE OR REPLACE FUNCTION update_product_and_position(
