@@ -18,23 +18,20 @@ class UserDatabaseHandler:
         status = ""
 
         try:
-            logger.info(f"Inserting user: {user.username}")
+            logger.info(f"Inserting user: {user.firebase_uid}")
 
             session.execute(
                 text(
-                    # TODO: user_id should be added to parts to insert here
-                    "INSERT INTO users (username, password_hash, email, store_name, personal_name, machine_serial_number, phone_number, user_role) "
-                    "VALUES (:username, :password_hash, :email, :store_name, :personal_name, :machine_serial_number, :phone_number, :user_role)"
+                    "INSERT INTO users (user_id, password_hash, email, store_name, personal_name, machine_serial_number, phone_number, user_role) "
+                    "VALUES (:user_id, :password_hash, :email, :store_name, :personal_name, :machine_serial_number, :phone_number, :user_role)"
                 ),
                 {
-                    "username": user.username,
+                    "user_id": user.firebase_uid,
                     "password_hash": user.password_hash,
                     "email": user.email,
                     "store_name": user.store_name,
-                    "personal_name": user.personal_name,
                     "machine_serial_number": user.machine_serial_number,
                     "phone_number": user.phone_number,
-                    "user_role": user.user_role,
                 },
             )
 
@@ -43,10 +40,10 @@ class UserDatabaseHandler:
             status = "inserted"
 
         except Exception as e:
-            logger.error(f"Failed to insert user: {user.username} - {e}")
+            logger.error(f"Failed to insert user: {user.firebase_uid} - {e}")
             session.rollback()
 
-            status = "failed"
+            status = f"failed - {e}"
 
         return status
 

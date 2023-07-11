@@ -45,19 +45,12 @@ class Order(BaseModel):
 
 
 class User(BaseModel):
-    # TODO: add firebase uid as a param here
-    # TODO: Remove username
-    username: str
-    # TODO: backend should receive raw password and hash it - Add has method at endpoint
-    password_hash: str
+    firebase_uid: str
+    password: str
     email: str
     store_name: str
-    # TODO: Remove personal name
-    personal_name: str
     machine_serial_number: str
     phone_number: str
-    # TODO: Remove user role
-    user_role: str
 
 
 class ProductPosition(BaseModel):
@@ -88,7 +81,6 @@ def produce_message(order: Order):
     producer.flush()
 
 
-# TODO backgrounf_tasks is a param i need to pass?
 @app.post("/orders/")
 async def create_order(order: Order, background_tasks: BackgroundTasks):
     background_tasks.add_task(produce_message, order)
@@ -213,9 +205,7 @@ async def create_user(user: User):
 
     except Exception as e:
         logger.error(f"Failed to create/update user: {e}")
-        # TODO - This return is wrong you're returning 200 as status code with a body
-        # thas has 500 - Use HTTPException to fix this
-        return {"status": "Failed to create/update user"}, 500
+        raise HTTPException(status_code=500, detail=f"user creation failed - {e}")
 
     finally:
         logger.info(f"Closing database session")
@@ -251,87 +241,6 @@ async def update_user(username: str, user: User):
         db_handler.close_session(session)
 
 
-@app.get("/storage/")
-async def get_storage():
-    return {
-        "storage": [
-            {
-                "id": 1,
-                "name": "Caixa de Papelão",
-                "description": "Caixa de papelão para transporte de objetos",
-                "price": 10.0,
-                "quantity": 10,
-                "position_x": 0,
-                "position_y": 0,
-                "size": "M",
-                "weight": 0.5,
-            },
-            {
-                "id": 2,
-                "name": "Livro: Python for Dummies",
-                "description": "Livro de Python para iniciantes",
-                "price": 20.0,
-                "quantity": 5,
-                "position_x": 0,
-                "position_y": 1,
-                "size": "M",
-                "weight": 0.3,
-            },
-            {
-                "id": 3,
-                "name": "Controle Logitech",
-                "description": "Controle de submarino",
-                "price": 30.0,
-                "quantity": 2,
-                "position_x": 1,
-                "position_y": 0,
-                "size": "P",
-                "weight": 0.2,
-            },
-            {
-                "id": 4,
-                "name": "Mouse Bluetooth",
-                "description": "Mouse sem fio",
-                "price": 40.0,
-                "quantity": 10,
-                "position_x": 1,
-                "position_y": 1,
-                "size": "M",
-                "weight": 0.1,
-            },
-            {
-                "id": 5,
-                "name": "Licor Baileys",
-                "description": "Licor de chocolate",
-                "price": 100.0,
-                "quantity": 10,
-                "position_x": 2,
-                "position_y": 0,
-                "size": "G",
-                "weight": 1.0,
-            },
-        ],
-        "available_positions": [
-            {
-                "position_x": 2,
-                "position_y": 2,
-            },
-            {
-                "position_x": 2,
-                "position_y": 1,
-            },
-            {
-                "position_x": 1,
-                "position_y": 2,
-            },
-            {
-                "position_x": 0,
-                "position_y": 2,
-            },
-        ],
-    }
-
-
 @app.post("/products/")
 async def create_product(product: ProductPosition):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
@@ -345,10 +254,7 @@ async def create_product(product: ProductPosition):
 
     except Exception as e:
         logger.error(f"Failed to create/update product: {e}")
-        # TODO - This return is wrong you're returning 200 as status code with a body
-        # thas has 500 - Use HTTPException to fix this
-        # Also 500 is not the only possible return is better to analyse what's gonna be returned
-        return {"status": "Failed to create/update product"}, 500
+        raise HTTPException(status_code=500, detail=f"Failed to create/update product - {e}")
 
     finally:
         logger.info(f"Closing database session")
