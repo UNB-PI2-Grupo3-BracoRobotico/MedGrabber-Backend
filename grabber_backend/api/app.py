@@ -51,6 +51,13 @@ class User(BaseModel):
     phone_number: str
 
 
+class UserUpdate(BaseModel):
+    email: str
+    store_name: str
+    machine_serial_number: str
+    phone_number: str
+
+
 class ProductPosition(BaseModel):
     product_name: str
     product_description: str
@@ -220,9 +227,8 @@ async def create_user(user: User):
 # TODO - We shouldn't pass the whole user to this endpoint just the properties we want to change
 
 
-@app.put("/users/{username}", status_code=204)
-async def update_user(username: str, user: User):
-    user.username = username  # this line is necessary?
+@app.put("/users/{user_id}", status_code=204)
+async def update_user(user_id: str, user: UserUpdate):
     logger.info(f"Updating user: {user}")
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
 
@@ -230,7 +236,8 @@ async def update_user(username: str, user: User):
         logger.info(f"Creating database session")
         session = db_handler.create_session()
         user_db_handler = UserDatabaseHandler(session)
-        user_db_handler.update_user(user)
+        status = user_db_handler.update_user(user_id, user)
+        logger.info(f"User updated: {user}")
 
     except Exception as e:
         logger.error(f"Failed to update user: {e}")
@@ -238,6 +245,10 @@ async def update_user(username: str, user: User):
 
     finally:
         db_handler.close_session(session)
+    logger.info(f"Sending response back to client")
+    if status == "failed":
+        raise HTTPException(status_code=409, detail="user update failed")
+    return {"message": "user updated"}
 
 
 @app.post("/products/", status_code=201)
