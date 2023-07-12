@@ -107,10 +107,16 @@ CREATE OR REPLACE FUNCTION create_product_and_position(
 DECLARE
     v_user_id INTEGER;
     v_product_id INTEGER;
+    v_product_exists INTEGER;
 BEGIN
     SELECT user_id INTO v_user_id FROM users WHERE user_id = p_modified_by_user_id;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'User not found';
+    END IF;
+
+    SELECT product_id INTO v_product_exists FROM position WHERE position_x = p_position_x AND position_y = p_position_y AND is_exit = FALSE;
+    IF v_product_exists IS NOT NULL THEN
+        RAISE EXCEPTION 'Product already exists at the specified position';
     END IF;
 
     INSERT INTO product (product_name, product_description, product_price, peso, size, modified_by, modified_at)
@@ -130,5 +136,61 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         RAISE EXCEPTION 'Failed to insert product: % - %', p_product_name, SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE OR REPLACE FUNCTION update_product_and_position(
+    p_product_id INTEGER,
+    p_product_name VARCHAR(50),
+    p_product_description VARCHAR(300),
+    p_product_price DECIMAL(10,2),
+    p_peso DECIMAL(8,2),
+    p_size product_size_enum,
+    p_modified_by_username VARCHAR(50),
+    p_position_x INTEGER,
+    p_position_y INTEGER,
+    p_product_amount INTEGER
+) RETURNS VOID AS $$
+DECLARE
+    v_user_id INTEGER;
+BEGIN
+    SELECT user_id INTO v_user_id FROM users WHERE username = p_modified_by_username;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'User not found';
+    END IF;
+
+    UPDATE product
+    SET
+        product_name = p_product_name,
+        product_description = p_product_description,
+        product_price = p_product_price,
+        peso = p_peso,
+        size = p_size,
+        modified_by = v_user_id,
+        modified_at = CURRENT_TIMESTAMP
+    WHERE
+        product_id = p_product_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Product not found';
+    END IF;
+
+    UPDATE position
+    SET product_amount = p_product_amount,
+        modified_by = v_user_id,
+        modified_at = CURRENT_TIMESTAMP
+        position_x = p_position_x
+        position_y = p_position_y
+    WHERE product_id = p_product_id
+        AND is_exit = FALSE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Position not found or is an exit';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'Failed to update product: % - %', p_product_id, SQLERRM;
 END;
 $$ LANGUAGE plpgsql;

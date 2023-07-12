@@ -64,7 +64,7 @@ class ProductPosition(BaseModel):
     product_price: float
     peso: float
     size: str
-    modified_by_username: str
+    modified_by_username: Optional[str]
     position_x: int
     position_y: int
     product_amount: int
@@ -276,6 +276,52 @@ async def create_product(product: ProductPosition):
     return {"status": f"{status}"}
 
 
+@app.delete("/products/{product_id}")
+async def delete_product(product_id: int):
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    logger.info(f"Deleting product with ID: {product_id}")
+    try:
+        session = db_handler.create_session()
+        product_db_handler = ProductDatabaseHandler(session)
+
+        status = product_db_handler.delete_product(product_id)
+        logger.info(f"Product deleted with ID: {product_id}")
+
+    except Exception as e:
+        logger.error(f"Failed to delete product: {e}")
+        return {"status": "Failed to delete product"}, 500
+
+    finally:
+        logger.info(f"Closing database session")
+        db_handler.close_session(session)
+
+    logger.info(f"Sending response back to client")
+    return {"status": f"{status}"}
+
+
+@app.put("/products/{product_id}")
+async def update_product(product_id: int, updated_product: ProductPosition):
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    logger.info(f"Updating product with ID: {product_id}")
+    try:
+        session = db_handler.create_session()
+        product_db_handler = ProductDatabaseHandler(session)
+
+        status = product_db_handler.update_product(product_id, updated_product)
+        logger.info(f"Product updated with ID: {product_id}")
+
+    except Exception as e:
+        logger.error(f"Failed to update product: {e}")
+        return {"status": "Failed to update product"}, 500
+
+    finally:
+        logger.info(f"Closing database session")
+        db_handler.close_session(session)
+
+    logger.info(f"Sending response back to client")
+    return {"status": f"{status}"}
+
+
 class ProductPositionData(BaseModel):
     product_id: Optional[int]
     product_name: Optional[str]
@@ -302,6 +348,7 @@ async def get_product_position_list():
                 p.product_price,
                 p.peso,
                 p.size,
+                pos.product_amount,
                 pos.position_x,
                 pos.position_y
             FROM 
@@ -324,8 +371,9 @@ async def get_product_position_list():
                 "product_price": row[3],
                 "peso": row[4],
                 "size": row[5],
-                "position_x": row[6],
-                "position_y": row[7],
+                "amount": row [6],
+                "position_x": row[7],
+                "position_y": row[8],
             }
             for row in result_filled_positions
         ]
