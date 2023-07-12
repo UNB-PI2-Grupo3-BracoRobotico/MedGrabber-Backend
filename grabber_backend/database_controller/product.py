@@ -49,9 +49,9 @@ class ProductDatabaseHandler:
                 "peso": row[4],
                 "size": row[5],
                 "modified_by_user": row [6],
-                "position_x": row[7],
-                "position_y": row[8],
-                "amount": row[9]
+                "amount": row[7]
+                "position_x": row[8],
+                "position_y": row[9],
             }
             for row in result_filled_positions
         ]
