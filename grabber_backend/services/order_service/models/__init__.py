@@ -4,10 +4,10 @@ from pydantic import BaseModel
 
 
 class Order(BaseModel):
-    order_id: int
-    customer_id: int
+    id: int
+    user: str
     status: Optional[str] = "received"
-    item_list: list[dict]
+    order_items: list[dict]
     total_price: str
     payment_method: str
-    timestamp: str
+    timestamp: Optional[int]
