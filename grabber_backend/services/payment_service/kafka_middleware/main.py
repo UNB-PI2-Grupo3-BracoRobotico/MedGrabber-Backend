@@ -8,7 +8,7 @@ from confluent_kafka import Consumer, Producer, KafkaError
 from grabber_backend.config.kafka import (
     KAFKA_BOOTSTRAP_SERVERS,
     AUTO_OFFSET_RESET,
-    ORDER_MANAGER_CONSUMER_GROUP_ID,
+    PAYMENT_CONSUMER_GROUP_ID,
 )
 from grabber_backend.config.database import DATABASE_CONNECTION_STRING
 from grabber_backend.database_controller.database_handler import DatabaseHandler
@@ -34,7 +34,7 @@ class KafkaClient:
                 self.consumer = Consumer(
                     {
                         "bootstrap.servers": bootstrap_servers,
-                        "group.id": ORDER_MANAGER_CONSUMER_GROUP_ID,
+                        "group.id": PAYMENT_CONSUMER_GROUP_ID,
                         "auto.offset.reset": AUTO_OFFSET_RESET,
                     }
                 )
@@ -112,14 +112,14 @@ class KafkaClient:
 
             if status == "awaiting_payment":
                 logging.info("Waiting for payment")
-                time.sleep(3)
+                sleep(3)
                 logging.info("Payment received")
                 status = "pending"
  
                 messages_to_send = {
                     "order-status": (
                         {
-                            "order_id": order_id,
+                            "order_id": order,
                             "status": status,
                         }
                     )

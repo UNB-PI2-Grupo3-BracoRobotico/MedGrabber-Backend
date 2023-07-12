@@ -3,12 +3,13 @@ import logging
 import json
 from time import sleep
 
+from sqlalchemy import create_engine, text
 from confluent_kafka import Consumer, Producer, KafkaError
 
 from grabber_backend.config.kafka import (
     KAFKA_BOOTSTRAP_SERVERS,
     AUTO_OFFSET_RESET,
-    ORDER_MANAGER_CONSUMER_GROUP_ID,
+    ROBOTIC_ARM_CONSUMER_GROUP_ID,
 )
 from grabber_backend.config.database import DATABASE_CONNECTION_STRING
 from grabber_backend.database_controller.database_handler import DatabaseHandler
@@ -34,7 +35,7 @@ class KafkaClient:
                 self.consumer = Consumer(
                     {
                         "bootstrap.servers": bootstrap_servers,
-                        "group.id": ORDER_MANAGER_CONSUMER_GROUP_ID,
+                        "group.id": ROBOTIC_ARM_CONSUMER_GROUP_ID,
                         "auto.offset.reset": AUTO_OFFSET_RESET,
                     }
                 )
@@ -106,24 +107,24 @@ class KafkaClient:
         message = message_data.get('message')
 
         if topic == "order-status":
-            logging.info(message)
             status = message.get("status")
             order = message.get("order_id")
 
             if status == "pending":
-
+                logging.info('Received order message')
+                logging.info(message)
                 product_list = self.get_products(order)
 
                 messages_to_send = {
                     "order-status": (
                         {
-                            "order_id": order_id,
+                            "order_id": order,
                             "status": "processing",
                         }
                     ),
                     "order-products": (
                         {
-                            "order_id": order_id,
+                            "order_id": order,
                             "products": product_list
                         }
                     )
@@ -149,7 +150,6 @@ class KafkaClient:
             """
         ).bindparams(order_id=order_id))
 
-        result_proxy = self.get_order_products(order_id)
         result_set = result_proxy.fetchall()
 
         for row in result_set:

@@ -2,3 +2,7 @@ KAFKA_BOOTSTRAP_SERVERS = "kafka:9092"
 AUTO_OFFSET_RESET = "earliest"
 
 ORDER_MANAGER_CONSUMER_GROUP_ID = "order_manager"
+
+PAYMENT_CONSUMER_GROUP_ID = "payment_service"
+
+ROBOTIC_ARM_CONSUMER_GROUP_ID = "robotic_arm"
