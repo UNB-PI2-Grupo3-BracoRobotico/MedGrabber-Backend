@@ -13,6 +13,7 @@ from grabber_backend.database_controller.database_handler import DatabaseHandler
 from grabber_backend.database_controller.user import UserDatabaseHandler
 from grabber_backend.database_controller.models import User
 from grabber_backend.database_controller.product import ProductDatabaseHandler
+from grabber_backend.database_controller.position import PositionDatabaseHandler
 from grabber_backend.database_controller.models import Product, Position
 
 
@@ -249,6 +250,7 @@ async def update_user(user_id: str, user: UserUpdate):
         raise HTTPException(status_code=409, detail="User update failed")
     return {"message": "User updated"}
 
+
 @app.get("/users/{user_id}", response_model=UserUpdate)
 async def get_user(user_id: str):
     logger.info(f"Fetching user with user_id: {user_id}")
@@ -273,6 +275,47 @@ async def get_user(user_id: str):
         return UserUpdate(**user)
     else:
         return user
+
+@app.get("/availablePositions/")
+async def get_available_positions():
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    available_positions = []    
+    try:
+        logger.info(f"Creating database session")
+        session = db_handler.create_session()
+        position_db_handler = PositionDatabaseHandler(session)
+        available_positions = position_db_handler.get_available_positions()
+    except Exception as e:
+        logger.error(f"Failed to update user: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get available positions")
+    finally:
+        db_handler.close_session(session)
+    logger.info(f"Sending response back to client")
+    if status == "failed":
+        raise HTTPException(status_code=409, detail="user update failed")
+    return {"available_positions": available_positions}
+    
+
+@app.get("/products/")
+async def get_product_position_list():
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    filled_positions = []
+    try:
+        session = db_handler.create_session()
+        product_db_handler = ProductDatabaseHandler(session)
+
+        filled_positions = product_db_handler.get_products()
+    except Exception as e:
+        logger.error(f"Failed to get products: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get product - {e}"
+        )
+    finally:
+        logger.info(f"Closing database session")
+        db_handler.close_session(session)
+    return {"products": filled_positions}
+
+
 
 @app.post("/products/", status_code=201)
 async def create_product(product: ProductPosition):
@@ -343,87 +386,3 @@ async def update_product(product_id: int, updated_product: ProductPosition):
 
     logger.info(f"Sending response back to client")
     return {"status": f"{status}"}
-
-
-@app.get("/products/")
-async def get_product_position_list():
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-    with db_handler.create_session() as connection:
-        # Query for all products with filled positions.
-        result_filled_positions = connection.execute(
-            text(
-                """
-            SELECT 
-                p.product_id,
-                p.product_name,
-                p.product_description,
-                p.product_price,
-                p.peso,
-                p.size,
-                pos.product_amount,
-                pos.position_x,
-                pos.position_y
-            FROM 
-                position pos
-            JOIN 
-                product p 
-            ON 
-                pos.product_id = p.product_id
-            WHERE 
-                pos.is_exit = FALSE;
-        """
-            )
-        )
-
-        filled_positions = [
-            {
-                "product_id": row[0],
-                "product_name": row[1],
-                "product_description": row[2],
-                "product_price": row[3],
-                "peso": row[4],
-                "size": row[5],
-                "amount": row [6],
-                "position_x": row[7],
-                "position_y": row[8],
-            }
-            for row in result_filled_positions
-        ]
-
-        # Query for all empty positions.
-        result_empty_positions = connection.execute(
-            text(
-                """
-            SELECT 
-                NULL AS product_id,
-                NULL AS product_name,
-                NULL AS product_description,
-                NULL AS product_price,
-                NULL AS peso,
-                NULL AS size,
-                pos.position_x,
-                pos.position_y
-            FROM 
-                position pos
-            WHERE 
-                pos.product_id IS NULL AND 
-                pos.is_exit = FALSE;
-        """
-            )
-        )
-
-        empty_positions = [
-            {
-                "product_id": row[0],
-                "product_name": row[1],
-                "product_description": row[2],
-                "product_price": row[3],
-                "peso": row[4],
-                "size": row[5],
-                "position_x": row[6],
-                "position_y": row[7],
-            }
-            for row in result_empty_positions
-        ]
-
-    return {"products": filled_positions, "available_positions": empty_positions}
