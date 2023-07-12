@@ -52,11 +52,10 @@ class User(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    email: str
-    store_name: str
-    machine_serial_number: str
-    phone_number: str
-
+    email: str = None
+    store_name: str = None
+    machine_serial_number: str = None
+    phone_number: str = None
 
 class ProductPosition(BaseModel):
     product_name: str
@@ -227,7 +226,7 @@ async def create_user(user: User):
 # TODO - We shouldn't pass the whole user to this endpoint just the properties we want to change
 
 
-@app.put("/users/{user_id}", status_code=204)
+@app.patch("/users/{user_id}", status_code=204)
 async def update_user(user_id: str, user: UserUpdate):
     logger.info(f"Updating user: {user}")
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
@@ -247,9 +246,8 @@ async def update_user(user_id: str, user: UserUpdate):
         db_handler.close_session(session)
     logger.info(f"Sending response back to client")
     if status == "failed":
-        raise HTTPException(status_code=409, detail="user update failed")
-    return {"message": "user updated"}
-
+        raise HTTPException(status_code=409, detail="User update failed")
+    return {"message": "User updated"}
 
 @app.post("/products/", status_code=201)
 async def create_product(product: ProductPosition):

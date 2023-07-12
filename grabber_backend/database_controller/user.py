@@ -53,37 +53,49 @@ class UserDatabaseHandler:
         session = self.session
         status = ""
         try:
+            update_fields = {}
+
+            if user.email:
+                update_fields["email"] = user.email
+            if user.store_name:
+                update_fields["store_name"] = user.store_name
+            if user.machine_serial_number:
+                update_fields["machine_serial_number"] = user.machine_serial_number
+            if user.phone_number:
+                update_fields["phone_number"] = user.phone_number
+
+            if not update_fields:
+                raise HTTPException(status_code=400, detail="No fields provided for update")
+
             session.execute(
                 text(
                     """
                     UPDATE users 
                         SET 
-                            email = :email, 
-                            store_name = :store_name, 
-                            machine_serial_number = :machine_serial_number, 
-                            phone_number = :phone_number 
+                            email = COALESCE(:email, email), 
+                            store_name = COALESCE(:store_name, store_name), 
+                            machine_serial_number = COALESCE(:machine_serial_number, machine_serial_number), 
+                            phone_number = COALESCE(:phone_number, phone_number) 
                         WHERE 
                             user_id = :user_id
                     """
                 ),
                 {
-                    "email": user.email,
-                    "store_name": user.store_name,
-                    "machine_serial_number": user.machine_serial_number,
-                    "phone_number": user.phone_number,
+                    "email": update_fields.get("email"),
+                    "store_name": update_fields.get("store_name"),
+                    "machine_serial_number": update_fields.get("machine_serial_number"),
+                    "phone_number": update_fields.get("phone_number"),
                     "user_id": user_id
                 },
             )
 
             session.commit()
-            status = "inserted"
+            status = "updated"
 
         except Exception as e:
             logger.error(f"Failed to update user: {user_id} - {e}")
             session.rollback()
-
-            status = f"failed - {e}"
-
-            raise e
+            status = "failed"
+            raise HTTPException(status_code=500, detail=f"Failed to update user: {user_id}")
 
         return status
