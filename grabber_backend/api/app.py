@@ -249,6 +249,31 @@ async def update_user(user_id: str, user: UserUpdate):
         raise HTTPException(status_code=409, detail="User update failed")
     return {"message": "User updated"}
 
+@app.get("/users/{user_id}", response_model=UserUpdate)
+async def get_user(user_id: str):
+    logger.info(f"Fetching user with user_id: {user_id}")
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+
+    try:
+        logger.info(f"Creating database session")
+        session = db_handler.create_session()
+        user_db_handler = UserDatabaseHandler(session)
+        user = user_db_handler.get_user(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+    except Exception as e:
+        logger.error(f"Failed to fetch user: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch user")
+
+    finally:
+        db_handler.close_session(session)
+    logger.info(f"Sending response back to client")
+    if isinstance(user, dict):
+        return UserUpdate(**user)
+    else:
+        return user
+
 @app.post("/products/", status_code=201)
 async def create_product(product: ProductPosition):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)

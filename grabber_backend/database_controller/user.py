@@ -49,6 +49,20 @@ class UserDatabaseHandler:
 
         return status
 
+    def get_user(self, user_id):
+        session = self.session
+        try:
+            result = session.execute(
+                text("SELECT * FROM users WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            user = result.fetchone()
+            return user
+
+        except Exception as e:
+            logger.error(f"Failed to fetch user: {user_id} - {e}")
+            raise e
+
     def update_user(self, user_id, user):
         session = self.session
         status = ""
