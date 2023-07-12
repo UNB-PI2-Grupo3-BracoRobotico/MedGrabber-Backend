@@ -191,7 +191,7 @@ async def get_orders():
                 ],
                 "total_price": 640.0,
                 "payment_method": "pix",
-                "status": "ready_to_get",
+                "status": "canceled",
                 "date": 1594833191,
             },
         ]
