@@ -67,7 +67,7 @@ class ProductPosition(BaseModel):
     modified_by_user: str
     position_x: int
     position_y: int
-    product_amount: int
+    amount: int
 
 
 app = FastAPI()
