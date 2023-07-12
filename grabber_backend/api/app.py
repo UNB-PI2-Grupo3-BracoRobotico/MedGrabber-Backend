@@ -64,7 +64,7 @@ class ProductPosition(BaseModel):
     product_price: float
     peso: float
     size: str
-    modified_by_username: Optional[str]
+    modified_by_user: str
     position_x: int
     position_y: int
     product_amount: int
@@ -320,17 +320,6 @@ async def update_product(product_id: int, updated_product: ProductPosition):
 
     logger.info(f"Sending response back to client")
     return {"status": f"{status}"}
-
-
-class ProductPositionData(BaseModel):
-    product_id: Optional[int]
-    product_name: Optional[str]
-    product_description: Optional[str]
-    product_price: Optional[float]
-    peso: Optional[float]
-    size: Optional[str]
-    position_x: int
-    position_y: int
 
 
 @app.get("/products/")

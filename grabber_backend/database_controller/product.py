@@ -27,7 +27,7 @@ class ProductDatabaseHandler:
                     :product_price,
                     :peso,
                     :size,
-                    :modified_by_username,
+                    :modified_by_user,
                     :position_x,
                     :position_y,
                     :product_amount
@@ -107,7 +107,7 @@ class ProductDatabaseHandler:
                         :product_price,
                         :peso,
                         :size,
-                        :modified_by_username,
+                        :modified_by_user,
                         :position_x,
                         :position_y,
                         :product_amount
