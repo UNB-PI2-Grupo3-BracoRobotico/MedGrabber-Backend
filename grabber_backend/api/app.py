@@ -337,6 +337,7 @@ async def get_product_position_list():
                 p.product_price,
                 p.peso,
                 p.size,
+                pos.product_amount,
                 pos.position_x,
                 pos.position_y
             FROM 
@@ -359,8 +360,9 @@ async def get_product_position_list():
                 "product_price": row[3],
                 "peso": row[4],
                 "size": row[5],
-                "position_x": row[6],
-                "position_y": row[7],
+                "amount": row [6],
+                "position_x": row[7],
+                "position_y": row[8],
             }
             for row in result_filled_positions
         ]
