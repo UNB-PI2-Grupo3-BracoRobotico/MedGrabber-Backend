@@ -48,10 +48,10 @@ class ProductDatabaseHandler:
                 "product_price": row[3],
                 "peso": row[4],
                 "size": row[5],
-                "modified_by_user": row [6],
-                "amount": row[7]
+                "modified_by_user": row[6],
+                "amount": row[7],
                 "position_x": row[8],
-                "position_y": row[9],
+                "position_y": row[9]
             }
             for row in result_filled_positions
         ]
@@ -162,9 +162,7 @@ class ProductDatabaseHandler:
                 ),
                 params=update_data,
             )
-
             session.commit()
-
             status = "updated"
 
         except Exception as e:
