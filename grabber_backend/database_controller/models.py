@@ -31,7 +31,6 @@ class PaymentStatusEnum(PyEnum):
 class User(Base):
     __tablename__ = "users"
     username = Column(String(50), primary_key=True)
-    password_hash = Column(String(50), nullable=False)
     email = Column(String(50))
     store_name = Column(String(50))
     personal_name = Column(String(50), nullable=False)

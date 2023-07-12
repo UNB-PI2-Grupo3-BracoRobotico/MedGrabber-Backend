@@ -1,4 +1,5 @@
 import logging
+import hashlib
 
 from sqlalchemy import text
 
@@ -18,22 +19,19 @@ class UserDatabaseHandler:
         status = ""
 
         try:
-            logger.info(f"Inserting user: {user.username}")
+            logger.info(f"Inserting user: {user.firebase_uid}")
 
             session.execute(
                 text(
-                    "INSERT INTO users (username, password_hash, email, store_name, personal_name, machine_serial_number, phone_number, user_role) "
-                    "VALUES (:username, :password_hash, :email, :store_name, :personal_name, :machine_serial_number, :phone_number, :user_role)"
+                    "INSERT INTO users (user_id, email, store_name, machine_serial_number, phone_number) "
+                    "VALUES (:user_id, :email, :store_name, :machine_serial_number, :phone_number)"
                 ),
                 {
-                    "username": user.username,
-                    "password_hash": user.password_hash,
+                    "user_id": user.firebase_uid,
                     "email": user.email,
                     "store_name": user.store_name,
-                    "personal_name": user.personal_name,
                     "machine_serial_number": user.machine_serial_number,
                     "phone_number": user.phone_number,
-                    "user_role": user.user_role,
                 },
             )
 
@@ -42,28 +40,76 @@ class UserDatabaseHandler:
             status = "inserted"
 
         except Exception as e:
-            logger.error(f"Failed to insert user: {user.username} - {e}")
+            logger.error(f"Failed to insert user: {user.firebase_uid} - {e}")
             session.rollback()
 
-            status = "failed"
+            status = f"failed - {e}"
+
+            raise e
 
         return status
 
-    def update_user(self, session, user: User):
-        session.execute(
-            text(
-                "UPDATE users SET password_hash = :password_hash, email = :email, store_name = :store_name, "
-                "personal_name = :personal_name, machine_serial_number = :machine_serial_number, "
-                "phone_number = :phone_number, user_role = :user_role WHERE username = :username"
-            ),
-            {
-                "password_hash": user.password_hash,
-                "email": user.email,
-                "store_name": user.store_name,
-                "personal_name": user.personal_name,
-                "machine_serial_number": user.machine_serial_number,
-                "phone_number": user.phone_number,
-                "user_role": user.user_role,
-                "username": user.username,
-            },
-        )
+    def get_user(self, user_id):
+        session = self.session
+        try:
+            result = session.execute(
+                text("SELECT * FROM users WHERE user_id = :user_id"),
+                {"user_id": user_id},
+            )
+            user = result.fetchone()
+            return user
+
+        except Exception as e:
+            logger.error(f"Failed to fetch user: {user_id} - {e}")
+            raise e
+
+    def update_user(self, user_id, user):
+        session = self.session
+        status = ""
+        try:
+            update_fields = {}
+
+            if user.email:
+                update_fields["email"] = user.email
+            if user.store_name:
+                update_fields["store_name"] = user.store_name
+            if user.machine_serial_number:
+                update_fields["machine_serial_number"] = user.machine_serial_number
+            if user.phone_number:
+                update_fields["phone_number"] = user.phone_number
+
+            if not update_fields:
+                raise HTTPException(status_code=400, detail="No fields provided for update")
+
+            session.execute(
+                text(
+                    """
+                    UPDATE users 
+                        SET 
+                            email = COALESCE(:email, email), 
+                            store_name = COALESCE(:store_name, store_name), 
+                            machine_serial_number = COALESCE(:machine_serial_number, machine_serial_number), 
+                            phone_number = COALESCE(:phone_number, phone_number) 
+                        WHERE 
+                            user_id = :user_id
+                    """
+                ),
+                {
+                    "email": update_fields.get("email"),
+                    "store_name": update_fields.get("store_name"),
+                    "machine_serial_number": update_fields.get("machine_serial_number"),
+                    "phone_number": update_fields.get("phone_number"),
+                    "user_id": user_id
+                },
+            )
+
+            session.commit()
+            status = "updated"
+
+        except Exception as e:
+            logger.error(f"Failed to update user: {user_id} - {e}")
+            session.rollback()
+            status = "failed"
+            raise HTTPException(status_code=500, detail=f"Failed to update user: {user_id}")
+
+        return status
