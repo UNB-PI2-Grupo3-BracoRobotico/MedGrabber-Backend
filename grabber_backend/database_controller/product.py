@@ -76,7 +76,7 @@ class ProductDatabaseHandler:
                     :modified_by_user,
                     :position_x,
                     :position_y,
-                    :product_amount
+                    :amount
                 );
             """
                 ),
@@ -106,7 +106,8 @@ class ProductDatabaseHandler:
                 text(
                     """
                     UPDATE position
-                    SET product_id = NULL
+                    SET product_id = NULL,
+                        product_amount = 0
                     WHERE product_id = :product_id;
                 """
                 ),
@@ -140,40 +141,63 @@ class ProductDatabaseHandler:
 
         try:
             logger.info(f"Updating product: {product_id}")
-            update_data = update_product.dict()
-            update_data["product_id"] = product_id
-
             session.execute(
                 text(
                     """
                     UPDATE position
-                    SET product_id = NULL,
-                        product_amount = 0
+                    SET product_id = NULL
                     WHERE
                         product_id = :product_id;
                     """
                 ),
                 {"product_id": product_id},
             )
-
+            if(update_product.amount > 0): 
+                session.execute(
+                    text("""
+                        UPDATE position
+                        SET product_id = :product_id,
+                            product_amount = :amount,
+                            modified_by = :modified_by_user,
+                            modified_at = CURRENT_TIMESTAMP
+                        WHERE 
+                            position_x = :position_x 
+                            AND position_y = :position_y 
+                            AND is_exit = FALSE; 
+                    """),
+                    {
+                        "product_id": product_id,
+                        "amount": update_product.amount,
+                        "position_x": update_product.position_x,
+                        "position_y": update_product.position_y,
+                        "modified_by_user": update_product.modified_by_user
+                    }
+                )
+            
             session.execute(
-                text(
-                    """
-                    SELECT update_product_and_position(
-                        :product_id,
-                        :product_name,
-                        :product_description,
-                        :product_price,
-                        :peso,
-                        :size,
-                        :modified_by_user,
-                        :position_x,
-                        :position_y,
-                        :product_amount
-                    );
-                    """
-                ),
-                params=update_data,
+                text("""
+                    UPDATE product
+                    SET
+                        product_name = :product_name,
+                        product_description = :product_description,
+                        product_price = :product_price,
+                        peso = :peso,
+                        size = :size,
+                        modified_by = :modified_by_user,
+                        modified_at = CURRENT_TIMESTAMP
+                    WHERE
+                        product_id = :product_id;
+                """),
+                {
+                    "product_id": product_id,
+                    "modified_by_user": update_product.modified_by_user,
+                    "product_name": update_product.product_name,
+                    "product_description": update_product.product_description,
+                    "product_price": update_product.product_price,
+                    "peso": update_product.peso,
+                    "size": update_product.size,
+                    "modified_by_user": update_product.modified_by_user
+                }
             )
             session.commit()
             status = "updated"
