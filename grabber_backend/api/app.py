@@ -53,11 +53,10 @@ class User(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    email: str
-    store_name: str
-    machine_serial_number: str
-    phone_number: str
-
+    email: str = None
+    store_name: str = None
+    machine_serial_number: str = None
+    phone_number: str = None
 
 class ProductPosition(BaseModel):
     product_name: str
@@ -228,7 +227,7 @@ async def create_user(user: User):
 # TODO - We shouldn't pass the whole user to this endpoint just the properties we want to change
 
 
-@app.put("/users/{user_id}", status_code=204)
+@app.patch("/users/{user_id}", status_code=204)
 async def update_user(user_id: str, user: UserUpdate):
     logger.info(f"Updating user: {user}")
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
@@ -248,8 +247,34 @@ async def update_user(user_id: str, user: UserUpdate):
         db_handler.close_session(session)
     logger.info(f"Sending response back to client")
     if status == "failed":
-        raise HTTPException(status_code=409, detail="user update failed")
-    return {"message": "user updated"}
+        raise HTTPException(status_code=409, detail="User update failed")
+    return {"message": "User updated"}
+
+
+@app.get("/users/{user_id}", response_model=UserUpdate)
+async def get_user(user_id: str):
+    logger.info(f"Fetching user with user_id: {user_id}")
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+
+    try:
+        logger.info(f"Creating database session")
+        session = db_handler.create_session()
+        user_db_handler = UserDatabaseHandler(session)
+        user = user_db_handler.get_user(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+    except Exception as e:
+        logger.error(f"Failed to fetch user: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch user")
+
+    finally:
+        db_handler.close_session(session)
+    logger.info(f"Sending response back to client")
+    if isinstance(user, dict):
+        return UserUpdate(**user)
+    else:
+        return user
 
 @app.get("/availablePositions/")
 async def get_available_positions():
@@ -289,6 +314,7 @@ async def get_product_position_list():
         logger.info(f"Closing database session")
         db_handler.close_session(session)
     return {"products": filled_positions}
+
 
 
 @app.post("/products/", status_code=201)
