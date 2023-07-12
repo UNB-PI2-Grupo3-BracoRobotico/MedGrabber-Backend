@@ -1,4 +1,7 @@
 from sqlalchemy import Column, String, Enum, Numeric, DateTime, ForeignKey, Integer
+from sqlalchemy import Column, Integer, String, Date, DECIMAL, ForeignKey, Enum
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql.sqltypes import Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import text
@@ -14,12 +17,13 @@ class UserRoleEnum(PyEnum):
 
 
 class OrderStatusEnum(PyEnum):
-    created = "created"
+    awaiting_payment = "awaiting_payment"
     pending = "pending"
-    paid = "paid"
-    separation = "separation"
-    delivered = "delivered"
+    processing = "processing"
+    ready_to_get = "ready_to_get"
+    finished = "finished"
     canceled = "canceled"
+
 
 
 class PaymentStatusEnum(PyEnum):
@@ -52,14 +56,16 @@ class Product(Base):
     size = Column(ENUM("P", "M", "G"))
 
 
-class Order(Base):
-    __tablename__ = "customer_order"
-    order_id = Column(Integer, primary_key=True)
-    user_username = Column(String(50), ForeignKey("users.username"))
-    order_date = Column(DateTime)
-    total_cost = Column(Numeric(10, 2))
-    order_status = Column(ENUM(OrderStatusEnum))
-    user = relationship("User", backref="orders")
+order_status_type = SQLAlchemyEnum('order_status_type')
+
+class DatabaseOrder(Base):
+    __tablename__ = 'customer_order'
+
+    customer_order_id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(128), ForeignKey('users.user_id'))
+    order_date = Column(Date)
+    total_cost = Column(DECIMAL(10, 2))
+    order_status = Column(order_status_type)
 
 
 class OrderProduct(Base):

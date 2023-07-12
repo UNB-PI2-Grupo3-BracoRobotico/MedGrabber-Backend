@@ -1,6 +1,7 @@
 from time import sleep
 from typing import Optional, List
 import logging
+from datetime import datetime
 
 from fastapi import FastAPI, BackgroundTasks, HTTPException, status
 from pydantic import BaseModel
@@ -42,12 +43,14 @@ class OrderItem(BaseModel):
     price: float
 
 
-class Order(BaseModel):
-    id: Optional[int]
+class ApiOrder(BaseModel):
+    customer_order_id: Optional[int] = None
     user: str
     order_items: List[OrderItem]
     total_price: float
     payment_method: str
+    order_date: Optional[datetime] = None
+    order_status: Optional[str] = "awaiting_payment"
 
 
 class User(BaseModel):
@@ -63,6 +66,7 @@ class UserUpdate(BaseModel):
     store_name: str = None
     machine_serial_number: str = None
     phone_number: str = None
+
 
 class ProductPosition(BaseModel):
     product_name: str
@@ -84,7 +88,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-def produce_message(order: Order):
+def produce_message(order: ApiOrder):
     # Convert Order to JSON and produce to Kafka
     logger.info("Sending order to Kafka")
     producer.produce("create-order", order.json())
@@ -93,7 +97,7 @@ def produce_message(order: Order):
 
 
 @app.post("/orders/")
-async def create_order(order: Order, background_tasks: BackgroundTasks):
+async def create_order(order: ApiOrder, background_tasks: BackgroundTasks):
     background_tasks.add_task(produce_message, order)
     return {"status": "Order sent"}
 

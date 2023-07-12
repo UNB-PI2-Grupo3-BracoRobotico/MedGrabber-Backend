@@ -3,11 +3,11 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class Order(BaseModel):
-    id: int
+class ServiceOrder(BaseModel):
+    id: Optional[int] = None
     user: str
-    status: Optional[str] = "received"
+    order_status: Optional[str] = "awaiting_payment"
     order_items: list[dict]
-    total_price: str
+    total_price: float
     payment_method: str
-    timestamp: Optional[int]
+    order_date: Optional[int] = None

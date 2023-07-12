@@ -121,8 +121,8 @@ class KafkaClient:
                 "order-status": (
                     {
                         "order_id": order_id,
-                        "customer_id": user.get("id"),
-                        "status": status,
+                        "customer_id": user,
+                        "status": str(status),
                     }
                 )
             }
