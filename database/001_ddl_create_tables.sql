@@ -28,6 +28,7 @@ CREATE TABLE product (
     size product_size_enum,
     FOREIGN KEY (modified_by) REFERENCES users(user_id)
 );
+
 CREATE TABLE customer_order (
     customer_order_id SERIAL PRIMARY KEY,
     user_id VARCHAR(128),

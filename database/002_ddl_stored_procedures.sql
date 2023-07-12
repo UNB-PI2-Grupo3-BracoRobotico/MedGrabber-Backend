@@ -148,7 +148,7 @@ CREATE OR REPLACE FUNCTION update_product_and_position(
     p_product_price DECIMAL(10,2),
     p_peso DECIMAL(8,2),
     p_size product_size_enum,
-    p_modified_by_username VARCHAR(50),
+    p_modified_by_user VARCHAR(50),
     p_position_x INTEGER,
     p_position_y INTEGER,
     p_product_amount INTEGER
@@ -156,7 +156,7 @@ CREATE OR REPLACE FUNCTION update_product_and_position(
 DECLARE
     v_user_id INTEGER;
 BEGIN
-    SELECT user_id INTO v_user_id FROM users WHERE username = p_modified_by_username;
+    SELECT user_id INTO v_user_id FROM users WHERE user_id = p_modified_by_user;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'User not found';
     END IF;
@@ -178,13 +178,25 @@ BEGIN
     END IF;
 
     UPDATE position
-    SET product_amount = p_product_amount,
+    SET
+        product_id = NULL,
+        modified_by = v_user_id,
+        modified_at = CURRENT_TIMESTAMP,
+        product_amount = NULL
+    WHERE
+        product_id = p_product_id
+        AND is_exit = FALSE;
+
+    IF NOT FOUND THEN
+    RAISE EXCEPTION 'Position not found or is an exit';
+    END IF;
+
+    UPDATE position
+    SET product_id = p_product_id,
+        product_amount = p_product_amount,
         modified_by = v_user_id,
         modified_at = CURRENT_TIMESTAMP
-        position_x = p_position_x
-        position_y = p_position_y
-    WHERE product_id = p_product_id
-        AND is_exit = FALSE;
+    WHERE position_x = p_position_x AND position_y = p_position_y AND is_exit = FALSE;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Position not found or is an exit';
