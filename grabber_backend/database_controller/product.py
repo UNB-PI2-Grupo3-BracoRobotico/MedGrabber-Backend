@@ -11,6 +11,52 @@ class ProductDatabaseHandler:
     def __init__(self, db_session):
         self.session = db_session
 
+    def get_products(self):
+        session = self.session
+        status = ""
+        result_filled_positions = session.execute(
+            text(
+                """
+            SELECT 
+                p.product_id,
+                p.product_name,
+                p.product_description,
+                p.product_price,
+                p.peso,
+                p.size,
+                p.modified_by,
+                pos.product_amount,
+                pos.position_x,
+                pos.position_y
+            FROM 
+                position pos
+            JOIN 
+                product p 
+            ON 
+                pos.product_id = p.product_id
+            WHERE 
+                pos.is_exit = FALSE;
+        """
+            )
+        )
+
+        filled_positions = [
+            {
+                "product_id": row[0],
+                "product_name": row[1],
+                "product_description": row[2],
+                "product_price": row[3],
+                "peso": row[4],
+                "size": row[5],
+                "modified_by_user": row [6],
+                "position_x": row[7],
+                "position_y": row[8],
+                "amount": row[9]
+            }
+            for row in result_filled_positions
+        ]
+        return filled_positions
+
     def insert_product(self, product):
         session = self.session
         status = ""

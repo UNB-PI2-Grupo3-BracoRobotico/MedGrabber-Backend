@@ -182,7 +182,7 @@ BEGIN
         product_id = NULL,
         modified_by = v_user_id,
         modified_at = CURRENT_TIMESTAMP,
-        product_amount = NULL
+        product_amount = 0
     WHERE
         product_id = p_product_id
         AND is_exit = FALSE;

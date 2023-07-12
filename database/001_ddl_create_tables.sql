@@ -57,7 +57,7 @@ CREATE TABLE position (
     position_x INTEGER,
     position_y INTEGER,
     product_id INTEGER,
-    product_amount INTEGER,
+    product_amount INTEGER DEFAULT 0,
     modified_by VARCHAR(128),
     modified_at TIMESTAMP,
     is_exit BOOLEAN NOT NULL DEFAULT FALSE,
