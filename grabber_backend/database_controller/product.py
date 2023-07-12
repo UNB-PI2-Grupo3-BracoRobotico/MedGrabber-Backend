@@ -48,10 +48,10 @@ class ProductDatabaseHandler:
                 "product_price": row[3],
                 "peso": row[4],
                 "size": row[5],
-                "modified_by_user": row [6],
-                "amount": row[7]
+                "modified_by_user": row[6],
+                "amount": row[7],
                 "position_x": row[8],
-                "position_y": row[9],
+                "position_y": row[9]
             }
             for row in result_filled_positions
         ]
@@ -146,6 +146,19 @@ class ProductDatabaseHandler:
             session.execute(
                 text(
                     """
+                    UPDATE position
+                    SET product_id = NULL,
+                        product_amount = 0
+                    WHERE
+                        product_id = :product_id;
+                    """
+                ),
+                {"product_id": product_id},
+            )
+
+            session.execute(
+                text(
+                    """
                     SELECT update_product_and_position(
                         :product_id,
                         :product_name,
@@ -162,9 +175,7 @@ class ProductDatabaseHandler:
                 ),
                 params=update_data,
             )
-
             session.commit()
-
             status = "updated"
 
         except Exception as e:

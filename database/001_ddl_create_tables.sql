@@ -63,7 +63,8 @@ CREATE TABLE position (
     is_exit BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (position_x, position_y),
     FOREIGN KEY (modified_by) REFERENCES users(user_id),
-    FOREIGN KEY (product_id) REFERENCES product(product_id),
+    FOREIGN KEY (product_id) REFERENCES product(product_id)
+    ON UPDATE CASCADE,
     CONSTRAINT no_product_on_exit CHECK (
         (is_exit = FALSE)
         OR (
