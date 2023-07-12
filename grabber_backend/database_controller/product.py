@@ -152,27 +152,27 @@ class ProductDatabaseHandler:
                 ),
                 {"product_id": product_id},
             )
-            if(update_product.amount > 0): 
-                session.execute(
-                    text("""
-                        UPDATE position
-                        SET product_id = :product_id,
-                            product_amount = :amount,
-                            modified_by = :modified_by_user,
-                            modified_at = CURRENT_TIMESTAMP
-                        WHERE 
-                            position_x = :position_x 
-                            AND position_y = :position_y 
-                            AND is_exit = FALSE; 
-                    """),
-                    {
-                        "product_id": product_id,
-                        "amount": update_product.amount,
-                        "position_x": update_product.position_x,
-                        "position_y": update_product.position_y,
-                        "modified_by_user": update_product.modified_by_user
-                    }
-                )
+            
+            session.execute(
+                text("""
+                    UPDATE position
+                    SET product_id = :product_id,
+                        product_amount = :amount,
+                        modified_by = :modified_by_user,
+                        modified_at = CURRENT_TIMESTAMP
+                    WHERE 
+                        position_x = :position_x 
+                        AND position_y = :position_y 
+                        AND is_exit = FALSE; 
+                """),
+                {
+                    "product_id": product_id,
+                    "amount": update_product.amount,
+                    "position_x": update_product.position_x,
+                    "position_y": update_product.position_y,
+                    "modified_by_user": update_product.modified_by_user
+                }
+            )
             
             session.execute(
                 text("""
