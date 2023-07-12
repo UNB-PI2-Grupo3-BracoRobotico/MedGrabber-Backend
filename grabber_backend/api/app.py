@@ -2,7 +2,7 @@ from time import sleep
 from typing import Optional, List
 import logging
 
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, HTTPException, status
 from pydantic import BaseModel
 from confluent_kafka import Producer
 from sqlalchemy import text
@@ -44,14 +44,11 @@ class Order(BaseModel):
 
 
 class User(BaseModel):
-    username: str
-    password_hash: str
+    firebase_uid: str
     email: str
     store_name: str
-    personal_name: str
     machine_serial_number: str
     phone_number: str
-    user_role: str
 
 
 class ProductPosition(BaseModel):
@@ -91,6 +88,13 @@ async def create_order(order: Order, background_tasks: BackgroundTasks):
 @app.get("/orders/")
 async def get_orders():
     # TODO: Implement actual database query
+
+    # TODO: Define possible status for order - Must be (awaiting payment, pending, processing, ready to get, delivered)
+    # make them as they are here but in snake_case - (awaiting_payment, pending, processing, ready_to_get, delivered)
+
+    # TODO: Insert proper dating format
+
+    # TODO: order_items are missing description
     return {
         "orders": [
             {
@@ -180,14 +184,14 @@ async def get_orders():
                 ],
                 "total_price": 640.0,
                 "payment_method": "pix",
-                "status": "delivered",
+                "status": "ready_to_get",
                 "date": 1594833191,
             },
         ]
     }
 
 
-@app.post("/users/")
+@app.post("/users/", status_code=status.HTTP_201_CREATED)
 async def create_user(user: User):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
     logger.info(f"Creating user: {user}")
@@ -199,19 +203,26 @@ async def create_user(user: User):
 
     except Exception as e:
         logger.error(f"Failed to create/update user: {e}")
-        return {"status": "Failed to create/update user"}, 500
+        raise HTTPException(status_code=500, detail=f"user creation failed - {e}")
 
     finally:
         logger.info(f"Closing database session")
         db_handler.close_session(session)
 
     logger.info(f"Sending response back to client")
-    return {"status": f"{status}"}
+    if status == "failed":
+        raise HTTPException(status_code=409, detail="user creation failed")
+    return {"message": "user created"}
 
 
-@app.put("/users/{username}")
+# TODO - This has to be a patch request
+# TODO - Instead of username we must pass the uid from the user
+# TODO - We shouldn't pass the whole user to this endpoint just the properties we want to change
+
+
+@app.put("/users/{username}", status_code=204)
 async def update_user(username: str, user: User):
-    user.username = username
+    user.username = username  # this line is necessary?
     logger.info(f"Updating user: {user}")
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
 
@@ -219,100 +230,17 @@ async def update_user(username: str, user: User):
         logger.info(f"Creating database session")
         session = db_handler.create_session()
         user_db_handler = UserDatabaseHandler(session)
-        user_db_handler.upsert_user(user)
+        user_db_handler.update_user(user)
 
     except Exception as e:
         logger.error(f"Failed to update user: {e}")
-        return {"status": "Failed to update user"}, 500
+        raise HTTPException(status_code=500, detail="Failed to update user")
 
     finally:
         db_handler.close_session(session)
 
-    return {"status": "User update request sent"}
 
-
-@app.get("/storage/")
-async def get_storage():
-    return {
-        "storage": [
-            {
-                "id": 1,
-                "name": "Caixa de Papelão",
-                "description": "Caixa de papelão para transporte de objetos",
-                "price": 10.0,
-                "quantity": 10,
-                "position_x": 0,
-                "position_y": 0,
-                "size": "M",
-                "weight": 0.5,
-            },
-            {
-                "id": 2,
-                "name": "Livro: Python for Dummies",
-                "description": "Livro de Python para iniciantes",
-                "price": 20.0,
-                "quantity": 5,
-                "position_x": 0,
-                "position_y": 1,
-                "size": "M",
-                "weight": 0.3,
-            },
-            {
-                "id": 3,
-                "name": "Controle Logitech",
-                "description": "Controle de submarino",
-                "price": 30.0,
-                "quantity": 2,
-                "position_x": 1,
-                "position_y": 0,
-                "size": "P",
-                "weight": 0.2,
-            },
-            {
-                "id": 4,
-                "name": "Mouse Bluetooth",
-                "description": "Mouse sem fio",
-                "price": 40.0,
-                "quantity": 10,
-                "position_x": 1,
-                "position_y": 1,
-                "size": "M",
-                "weight": 0.1,
-            },
-            {
-                "id": 5,
-                "name": "Licor Baileys",
-                "description": "Licor de chocolate",
-                "price": 100.0,
-                "quantity": 10,
-                "position_x": 2,
-                "position_y": 0,
-                "size": "G",
-                "weight": 1.0,
-            },
-        ],
-        "available_positions": [
-            {
-                "position_x": 2,
-                "position_y": 2,
-            },
-            {
-                "position_x": 2,
-                "position_y": 1,
-            },
-            {
-                "position_x": 1,
-                "position_y": 2,
-            },
-            {
-                "position_x": 0,
-                "position_y": 2,
-            },
-        ],
-    }
-
-
-@app.post("/products/")
+@app.post("/products/", status_code=201)
 async def create_product(product: ProductPosition):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
     logger.info(f"Creating product: {product}")
@@ -325,7 +253,9 @@ async def create_product(product: ProductPosition):
 
     except Exception as e:
         logger.error(f"Failed to create/update product: {e}")
-        return {"status": "Failed to create/update product"}, 500
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create/update product - {e}"
+        )
 
     finally:
         logger.info(f"Closing database session")

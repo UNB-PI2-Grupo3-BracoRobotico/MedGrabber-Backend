@@ -1,4 +1,5 @@
 import logging
+import hashlib
 
 from sqlalchemy import text
 
@@ -18,22 +19,19 @@ class UserDatabaseHandler:
         status = ""
 
         try:
-            logger.info(f"Inserting user: {user.username}")
+            logger.info(f"Inserting user: {user.firebase_uid}")
 
             session.execute(
                 text(
-                    "INSERT INTO users (username, password_hash, email, store_name, personal_name, machine_serial_number, phone_number, user_role) "
-                    "VALUES (:username, :password_hash, :email, :store_name, :personal_name, :machine_serial_number, :phone_number, :user_role)"
+                    "INSERT INTO users (user_id, email, store_name, machine_serial_number, phone_number) "
+                    "VALUES (:user_id, :email, :store_name, :machine_serial_number, :phone_number)"
                 ),
                 {
-                    "username": user.username,
-                    "password_hash": user.password_hash,
+                    "user_id": user.firebase_uid,
                     "email": user.email,
                     "store_name": user.store_name,
-                    "personal_name": user.personal_name,
                     "machine_serial_number": user.machine_serial_number,
                     "phone_number": user.phone_number,
-                    "user_role": user.user_role,
                 },
             )
 
@@ -42,22 +40,23 @@ class UserDatabaseHandler:
             status = "inserted"
 
         except Exception as e:
-            logger.error(f"Failed to insert user: {user.username} - {e}")
+            logger.error(f"Failed to insert user: {user.firebase_uid} - {e}")
             session.rollback()
 
-            status = "failed"
+            status = f"failed - {e}"
+
+            raise e
 
         return status
 
     def update_user(self, session, user: User):
         session.execute(
             text(
-                "UPDATE users SET password_hash = :password_hash, email = :email, store_name = :store_name, "
+                "UPDATE users SET email = :email, store_name = :store_name, "
                 "personal_name = :personal_name, machine_serial_number = :machine_serial_number, "
                 "phone_number = :phone_number, user_role = :user_role WHERE username = :username"
             ),
             {
-                "password_hash": user.password_hash,
                 "email": user.email,
                 "store_name": user.store_name,
                 "personal_name": user.personal_name,
