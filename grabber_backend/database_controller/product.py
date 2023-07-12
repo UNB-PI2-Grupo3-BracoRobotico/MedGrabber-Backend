@@ -146,6 +146,19 @@ class ProductDatabaseHandler:
             session.execute(
                 text(
                     """
+                    UPDATE position
+                    SET product_id = NULL,
+                        product_amount = 0
+                    WHERE
+                        product_id = :product_id;
+                    """
+                ),
+                {"product_id": product_id},
+            )
+
+            session.execute(
+                text(
+                    """
                     SELECT update_product_and_position(
                         :product_id,
                         :product_name,

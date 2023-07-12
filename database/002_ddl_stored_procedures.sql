@@ -99,20 +99,15 @@ CREATE OR REPLACE FUNCTION create_product_and_position(
     p_product_price DECIMAL(10,2),
     p_peso DECIMAL(8,2),
     p_size product_size_enum,
-    p_modified_by_user_id VARCHAR(50),
+    p_modified_by_user_id VARCHAR(128),
     p_position_x INTEGER,
     p_position_y INTEGER,
     p_product_amount INTEGER
 ) RETURNS VOID AS $$
 DECLARE
-    v_user_id INTEGER;
     v_product_id INTEGER;
     v_product_exists INTEGER;
 BEGIN
-    SELECT user_id INTO v_user_id FROM users WHERE user_id = p_modified_by_user_id;
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'User not found';
-    END IF;
 
     SELECT product_id INTO v_product_exists FROM position WHERE position_x = p_position_x AND position_y = p_position_y AND is_exit = FALSE;
     IF v_product_exists IS NOT NULL THEN
@@ -120,13 +115,13 @@ BEGIN
     END IF;
 
     INSERT INTO product (product_name, product_description, product_price, peso, size, modified_by, modified_at)
-    VALUES (p_product_name, p_product_description, p_product_price, p_peso, p_size, v_user_id, CURRENT_TIMESTAMP)
+    VALUES (p_product_name, p_product_description, p_product_price, p_peso, p_size, p_modified_by_user_id, CURRENT_TIMESTAMP)
     RETURNING product_id INTO v_product_id;
 
     UPDATE position
     SET product_id = v_product_id,
         product_amount = p_product_amount,
-        modified_by = v_user_id,
+        modified_by = p_modified_by_user_id,
         modified_at = CURRENT_TIMESTAMP
     WHERE position_x = p_position_x AND position_y = p_position_y AND is_exit = FALSE;
 
@@ -151,18 +146,7 @@ CREATE OR REPLACE FUNCTION update_product_and_position(
     p_position_y INTEGER,
     p_product_amount INTEGER
 ) RETURNS VOID AS $$
-DECLARE
-    v_old_position_x INTEGER;
-    v_old_position_y INTEGER;
-    v_current_product_id INTEGER;
 BEGIN
-    -- Retrieve the current product_id associated with the position
-    SELECT product_id INTO v_current_product_id
-    FROM position
-    WHERE position_x = p_position_x
-    AND position_y = p_position_y;
-
-    -- Update the product details
     UPDATE product
     SET
         product_name = p_product_name,
@@ -175,57 +159,22 @@ BEGIN
     WHERE
         product_id = p_product_id;
 
-    -- Update the position
-    IF v_current_product_id IS NULL THEN
-        -- No existing product associated with the position
-        UPDATE position
-        SET
-            product_id = p_product_id,
-            product_amount = p_product_amount,
-            modified_by = p_modified_by_user,
-            modified_at = CURRENT_TIMESTAMP
-        WHERE
-            position_x = p_position_x
-            AND position_y = p_position_y;
-    ELSE
-        -- Existing product associated with the position
-        IF v_current_product_id <> p_product_id THEN
-            -- Disassociate the existing product from the position
-            UPDATE position
-            SET
-                product_id = NULL,
-                product_amount = 0,
-                modified_by = p_modified_by_user,
-                modified_at = CURRENT_TIMESTAMP
-            WHERE
-                position_x = p_position_x
-                AND position_y = p_position_y;
-            
-            -- Associate the new product with the position
-            UPDATE position
-            SET
-                product_id = p_product_id,
-                product_amount = p_product_amount,
-                modified_by = p_modified_by_user,
-                modified_at = CURRENT_TIMESTAMP
-            WHERE
-                position_x = p_position_x
-                AND position_y = p_position_y;
-        ELSE
-            -- Product already associated with the position, update the product_amount
-            UPDATE position
-            SET
-                product_amount = p_product_amount,
-                modified_by = p_modified_by_user,
-                modified_at = CURRENT_TIMESTAMP
-            WHERE
-                position_x = p_position_x
-                AND position_y = p_position_y;
-        END IF;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Product not found';
     END IF;
 
+    UPDATE position
+    SET product_id = p_product_id,
+        product_amount = p_product_amount,
+        modified_by = p_modified_by_user,
+        modified_at = CURRENT_TIMESTAMP
+    WHERE position_x = p_position_x AND position_y = p_position_y AND is_exit = FALSE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Position not found or is an exit';
+    END IF;
 EXCEPTION
     WHEN OTHERS THEN
-        RAISE EXCEPTION 'Failed to update product and position: %', SQLERRM;
+        RAISE EXCEPTION 'Failed to update product: % - %', p_product_id, SQLERRM;
 END;
 $$ LANGUAGE plpgsql;
