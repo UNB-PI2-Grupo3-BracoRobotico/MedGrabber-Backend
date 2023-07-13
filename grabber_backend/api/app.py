@@ -263,7 +263,7 @@ async def create_product(product: ProductPosition):
     return {"status": f"{status}"}
 
 
-@app.delete("/products/{product_id}")
+@app.delete("/products/{product_id}", status_code=201)
 async def delete_product(product_id: int):
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
     logger.info(f"Deleting product with ID: {product_id}")
@@ -276,7 +276,9 @@ async def delete_product(product_id: int):
 
     except Exception as e:
         logger.error(f"Failed to delete product: {e}")
-        return {"status": "Failed to delete product"}, 500
+        raise HTTPException(
+            status_code=500, detail=f"Failed to delete product - {e}"
+        )
 
     finally:
         logger.info(f"Closing database session")

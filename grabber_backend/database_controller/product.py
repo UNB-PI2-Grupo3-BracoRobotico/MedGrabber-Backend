@@ -114,26 +114,25 @@ class ProductDatabaseHandler:
                 {"product_id": product_id},
             )
 
-            session.execute(
-                text(
-                    """
-                    DELETE FROM product WHERE product_id = :product_id;
-                """
-                ),
-                {"product_id": product_id},
-            )
-
             session.commit()
 
-            status = "deleted"
+            product = session.query(Product).get(product_id)
+            if product:
+                session.delete(product)
+                session.commit()
+                status = "deleted"
+            else:
+                status = "not found"
 
         except Exception as e:
-            logger.error(f"Failed to delete product with ID {product_id}: {e}")
+            logger.error(f"Failed to delete product: {product_id} - {e}")
             session.rollback()
-
             status = "failed"
 
+        if status == "deleted":
+            return None, 204  # Return No Content status code for successful deletion
         return status
+
 
     def update_product(self, product_id, update_product):
         session = self.session
