@@ -101,6 +101,7 @@ class KafkaClient:
         self.consumer.close()
 
     def encode_message(self, message):
+        logging.info(f'Encoding message: {str(message)}')
         return json.dumps(message).encode("utf-8")
 
     def proccess(self, topic, message_data):
@@ -142,18 +143,33 @@ class KafkaClient:
 
         result_proxy = session.execute(text(
             """
-            SELECT p.product_id, p.product_name, op.product_amount, pos.position_x, pos.position_y, p.peso, p.size
+            SELECT p.product_id,
+                p.product_name,
+                op.product_amount,
+                pos.position_x,
+                pos.position_y,
+                p.peso,
+                p.size
             FROM order_product op
             JOIN product p ON op.product_id = p.product_id
-            JOIN position pos ON op.position_x = pos.position_x AND op.position_y = pos.position_y
-            WHERE op.customer_order_id = :order_id;
+            JOIN position pos ON pos.product_id = p.product_id
+            WHERE op.customer_order_id = :customer_order_id;
             """
-        ).bindparams(order_id=order_id))
+        ).bindparams(customer_order_id=order_id))
 
         result_set = result_proxy.fetchall()
 
         for row in result_set:
-            product_list.append(row)
+            product = {
+                "product_id": row[0],
+                "product_name": row[1],
+                "product_amount": row[2],
+                "position_x": row[3],
+                "position_y": row[4],
+                "peso": float(row[5]),
+                "size": row[6]            
+            }
+            product_list.append(product)
 
         return product_list
 
