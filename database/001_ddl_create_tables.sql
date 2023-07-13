@@ -1,11 +1,10 @@
 CREATE TYPE user_role_type as ENUM ('customer', 'stock_manager');
 CREATE TYPE order_status_type as ENUM (
-    'created',
+    'awaiting_payment',
     'pending',
-    'paid',
-    'separation',
-    'delivered',
-    'canceled'
+    'processing',
+    'ready_to_get',
+    'finished'
 );
 CREATE TYPE product_size_enum AS ENUM ('P', 'M', 'G');
 CREATE TYPE payment_status_type as ENUM ('pending', 'paid', 'canceled');

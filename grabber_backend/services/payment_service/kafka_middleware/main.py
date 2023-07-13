@@ -8,14 +8,10 @@ from confluent_kafka import Consumer, Producer, KafkaError
 from grabber_backend.config.kafka import (
     KAFKA_BOOTSTRAP_SERVERS,
     AUTO_OFFSET_RESET,
-    ORDER_MANAGER_CONSUMER_GROUP_ID,
+    PAYMENT_CONSUMER_GROUP_ID,
 )
 from grabber_backend.config.database import DATABASE_CONNECTION_STRING
 from grabber_backend.database_controller.database_handler import DatabaseHandler
-from grabber_backend.services.order_service.shopping_manager.order_creator import (
-    OrderCreator,
-)
-from grabber_backend.database_controller.models import OrderStatusEnum
 
 
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +21,7 @@ RETRY_COOLDOWN = 10
 
 
 class KafkaClient:
-    AGENT_NAME = "order_service"
+    AGENT_NAME = "payment_service"
 
     def __init__(self, bootstrap_servers):
         logging.info(f"Initializing {self.AGENT_NAME}...")
@@ -38,7 +34,7 @@ class KafkaClient:
                 self.consumer = Consumer(
                     {
                         "bootstrap.servers": bootstrap_servers,
-                        "group.id": ORDER_MANAGER_CONSUMER_GROUP_ID,
+                        "group.id": PAYMENT_CONSUMER_GROUP_ID,
                         "auto.offset.reset": AUTO_OFFSET_RESET,
                     }
                 )
@@ -106,44 +102,38 @@ class KafkaClient:
     def encode_message(self, message):
         return json.dumps(message).encode("utf-8")
 
-    def proccess(self, topic, message):
-        if topic == "create-order":
+    def proccess(self, topic, message_data):
+        message = message_data.get("message")
+
+        if topic == "order-status":
             logging.info(message)
-            user = message.get("user")
-            order = message
+            status = message.get("status")
+            order = message.get("order_id")
 
-            if not user:
-                logging.error("User not found in message")
-                return
+            if status == "awaiting_payment":
+                logging.info("Waiting for payment")
+                sleep(3)
+                logging.info("Payment received")
+                status = "pending"
 
-            status, order_id = self.create_order(order)
-            messages_to_send = {
-                "order-status": (
-                    {
-                        "order_id": order_id,
-                        "customer_id": user,
-                        "status": str(status),
-                    }
-                )
-            }
-            kafka_client.produce(messages_to_send)
+                messages_to_send = {
+                    "order-status": (
+                        {
+                            "order_id": order,
+                            "status": status,
+                        }
+                    )
+                }
+                kafka_client.produce(messages_to_send)
+
         else:
             logging.error(f"Unknown topic: {topic}")
-
-    def create_order(self, order):
-        order_database_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-        session = order_database_handler.create_session()
-        order_creator = OrderCreator(order, session)
-
-        order_status, order_id = order_creator.receive_order()
-
-        return order_status, order_id
 
 
 if __name__ == "__main__":
     kafka_client = KafkaClient(KAFKA_BOOTSTRAP_SERVERS)
 
-    topics = ["create-order", "order-status"]
+    topics = ["order-status"]
     kafka_client.consume(topics)
 
     kafka_client.close()

@@ -6,7 +6,7 @@ import pytest
 from grabber_backend.database_controller.models import (
     User,
     Product,
-    Order,
+    DatabaseOrder,
     OrderProduct,
     Payment,
     Position,

@@ -5,7 +5,7 @@ from grabber_backend.database_controller.models import (
     Base,
     User,
     Product,
-    Order,
+    DatabaseOrder,
     OrderProduct,
     Payment,
     Position,

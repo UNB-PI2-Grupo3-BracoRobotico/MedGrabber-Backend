@@ -3,19 +3,16 @@ import logging
 import json
 from time import sleep
 
+from sqlalchemy import create_engine, text
 from confluent_kafka import Consumer, Producer, KafkaError
 
 from grabber_backend.config.kafka import (
     KAFKA_BOOTSTRAP_SERVERS,
     AUTO_OFFSET_RESET,
-    ORDER_MANAGER_CONSUMER_GROUP_ID,
+    ROBOTIC_ARM_CONSUMER_GROUP_ID,
 )
 from grabber_backend.config.database import DATABASE_CONNECTION_STRING
 from grabber_backend.database_controller.database_handler import DatabaseHandler
-from grabber_backend.services.order_service.shopping_manager.order_creator import (
-    OrderCreator,
-)
-from grabber_backend.database_controller.models import OrderStatusEnum
 
 
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +22,7 @@ RETRY_COOLDOWN = 10
 
 
 class KafkaClient:
-    AGENT_NAME = "order_service"
+    AGENT_NAME = "robotic_arm_service"
 
     def __init__(self, bootstrap_servers):
         logging.info(f"Initializing {self.AGENT_NAME}...")
@@ -38,7 +35,7 @@ class KafkaClient:
                 self.consumer = Consumer(
                     {
                         "bootstrap.servers": bootstrap_servers,
-                        "group.id": ORDER_MANAGER_CONSUMER_GROUP_ID,
+                        "group.id": ROBOTIC_ARM_CONSUMER_GROUP_ID,
                         "auto.offset.reset": AUTO_OFFSET_RESET,
                     }
                 )
@@ -104,46 +101,80 @@ class KafkaClient:
         self.consumer.close()
 
     def encode_message(self, message):
+        logging.info(f"Encoding message: {str(message)}")
         return json.dumps(message).encode("utf-8")
 
-    def proccess(self, topic, message):
-        if topic == "create-order":
-            logging.info(message)
-            user = message.get("user")
-            order = message
+    def proccess(self, topic, message_data):
+        message = message_data.get("message")
 
-            if not user:
-                logging.error("User not found in message")
-                return
+        if topic == "order-status":
+            status = message.get("status")
+            order = message.get("order_id")
 
-            status, order_id = self.create_order(order)
-            messages_to_send = {
-                "order-status": (
-                    {
-                        "order_id": order_id,
-                        "customer_id": user,
-                        "status": str(status),
-                    }
-                )
-            }
-            kafka_client.produce(messages_to_send)
+            if status == "pending":
+                logging.info("Received order message")
+                logging.info(message)
+                product_list = self.get_products(order)
+
+                messages_to_send = {
+                    "order-status": (
+                        {
+                            "order_id": order,
+                            "status": "processing",
+                        }
+                    ),
+                    "order-products": ({"order_id": order, "products": product_list}),
+                }
+                kafka_client.produce(messages_to_send)
+
         else:
             logging.error(f"Unknown topic: {topic}")
 
-    def create_order(self, order):
-        order_database_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-        session = order_database_handler.create_session()
-        order_creator = OrderCreator(order, session)
+    def get_products(self, order_id):
+        product_list = []
 
-        order_status, order_id = order_creator.receive_order()
+        database_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+        session = database_handler.create_session()
 
-        return order_status, order_id
+        result_proxy = session.execute(
+            text(
+                """
+            SELECT p.product_id,
+                p.product_name,
+                op.product_amount,
+                pos.position_x,
+                pos.position_y,
+                p.peso,
+                p.size
+            FROM order_product op
+            JOIN product p ON op.product_id = p.product_id
+            JOIN position pos ON pos.product_id = p.product_id
+            WHERE op.customer_order_id = :customer_order_id;
+            """
+            ).bindparams(customer_order_id=order_id)
+        )
+
+        result_set = result_proxy.fetchall()
+
+        for row in result_set:
+            product = {
+                "product_id": row[0],
+                "product_name": row[1],
+                "product_amount": row[2],
+                "position_x": row[3],
+                "position_y": row[4],
+                "peso": float(row[5]),
+                "size": row[6],
+            }
+            product_list.append(product)
+
+        return product_list
 
 
 if __name__ == "__main__":
     kafka_client = KafkaClient(KAFKA_BOOTSTRAP_SERVERS)
 
-    topics = ["create-order", "order-status"]
+    topics = ["order-status"]
     kafka_client.consume(topics)
 
     kafka_client.close()

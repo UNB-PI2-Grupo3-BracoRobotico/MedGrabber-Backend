@@ -7,10 +7,15 @@ END; $$
 LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION insert_new_order(p_user_user_id VARCHAR, p_order_date DATE, p_total_cost DECIMAL, p_order_status order_status_type)
-RETURNS VOID AS $$
+RETURNS INTEGER AS $$
+DECLARE 
+    new_order_id INTEGER;
 BEGIN
     INSERT INTO customer_order (user_id, order_date, total_cost, order_status)
-    VALUES ((SELECT user_id FROM users WHERE user_id = p_user_user_id), p_order_date, p_total_cost, p_order_status);
+    VALUES ((SELECT user_id FROM users WHERE user_id = p_user_user_id), p_order_date, p_total_cost, p_order_status)
+    RETURNING customer_order_id INTO new_order_id;
+
+    RETURN new_order_id;
 END; $$
 LANGUAGE plpgsql;
 
@@ -178,3 +183,44 @@ EXCEPTION
         RAISE EXCEPTION 'Failed to update product: % - %', p_product_id, SQLERRM;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE PROCEDURE insert_order_product_and_update_position(
+    _customer_order_id INTEGER,
+    _product_id INTEGER,
+    _product_amount INTEGER,
+    _modified_by VARCHAR(128)
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    _position RECORD;
+BEGIN
+    -- Get position based on the product_id with the most quantity
+    SELECT position_x, position_y, product_amount INTO _position
+    FROM position
+    WHERE product_id = _product_id 
+    ORDER BY product_amount DESC
+    LIMIT 1;
+
+    -- Check if there is enough product_amount in the position
+    IF _position.product_amount < _product_amount THEN
+        RAISE EXCEPTION 'Not enough product in position';
+    END IF;
+
+    -- Insert into order_product
+    INSERT INTO order_product (
+        customer_order_id,
+        product_id,
+        product_amount
+    ) VALUES (
+        _customer_order_id,
+        _product_id,
+        _product_amount
+    );
+
+    -- Subtract product_amount from position
+    UPDATE position
+    SET product_amount = product_amount - _product_amount, modified_by = _modified_by, modified_at = CURRENT_TIMESTAMP
+    WHERE position_x = _position.position_x AND position_y = _position.position_y;
+END;
+$$;

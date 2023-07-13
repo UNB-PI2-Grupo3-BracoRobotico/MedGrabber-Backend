@@ -51,7 +51,7 @@ class ProductDatabaseHandler:
                 "modified_by_user": row[6],
                 "amount": row[7],
                 "position_x": row[8],
-                "position_y": row[9]
+                "position_y": row[9],
             }
             for row in result_filled_positions
         ]
@@ -152,9 +152,10 @@ class ProductDatabaseHandler:
                 ),
                 {"product_id": product_id},
             )
-            
+
             session.execute(
-                text("""
+                text(
+                    """
                     UPDATE position
                     SET product_id = :product_id,
                         product_amount = :amount,
@@ -164,18 +165,20 @@ class ProductDatabaseHandler:
                         position_x = :position_x 
                         AND position_y = :position_y 
                         AND is_exit = FALSE; 
-                """),
+                """
+                ),
                 {
                     "product_id": product_id,
                     "amount": update_product.amount,
                     "position_x": update_product.position_x,
                     "position_y": update_product.position_y,
-                    "modified_by_user": update_product.modified_by_user
-                }
+                    "modified_by_user": update_product.modified_by_user,
+                },
             )
-            
+
             session.execute(
-                text("""
+                text(
+                    """
                     UPDATE product
                     SET
                         product_name = :product_name,
@@ -187,7 +190,8 @@ class ProductDatabaseHandler:
                         modified_at = CURRENT_TIMESTAMP
                     WHERE
                         product_id = :product_id;
-                """),
+                """
+                ),
                 {
                     "product_id": product_id,
                     "modified_by_user": update_product.modified_by_user,
@@ -196,8 +200,8 @@ class ProductDatabaseHandler:
                     "product_price": update_product.product_price,
                     "peso": update_product.peso,
                     "size": update_product.size,
-                    "modified_by_user": update_product.modified_by_user
-                }
+                    "modified_by_user": update_product.modified_by_user,
+                },
             )
             session.commit()
             status = "updated"

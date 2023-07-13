@@ -63,7 +63,7 @@ services:
       - kafka
     ports:
       - 8000:8000
-    # command: uvicorn grabber_backend.api.app:app --host 0.0.0.0 --port 8000
+    command: uvicorn grabber_backend.api.app:app --host 0.0.0.0 --port 8000
     restart: on-failure
 
   order-manager:
@@ -75,6 +75,28 @@ services:
       - db
       - kafka
     command: python grabber_backend/services/order_service/kafka_middleware/main.py
+    restart: on-failure
+
+  payment-service:
+    build: .
+    volumes:
+      - .:/app
+    tty: true
+    depends_on:
+      - db
+      - kafka
+    command: python grabber_backend/services/payment_service/kafka_middleware/main.py
+    restart: on-failure
+
+  robotic-arm-service:
+    build: .
+    volumes:
+      - .:/app
+    tty: true
+    depends_on:
+      - db
+      - kafka
+    command: python grabber_backend/services/robotic_arm_service/kafka_middleware/main.py
     restart: on-failure
 
 volumes:
