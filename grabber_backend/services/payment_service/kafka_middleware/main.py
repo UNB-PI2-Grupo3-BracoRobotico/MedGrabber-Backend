@@ -103,7 +103,7 @@ class KafkaClient:
         return json.dumps(message).encode("utf-8")
 
     def proccess(self, topic, message_data):
-        message = message_data.get('message')
+        message = message_data.get("message")
 
         if topic == "order-status":
             logging.info(message)
@@ -115,7 +115,7 @@ class KafkaClient:
                 sleep(3)
                 logging.info("Payment received")
                 status = "pending"
- 
+
                 messages_to_send = {
                     "order-status": (
                         {

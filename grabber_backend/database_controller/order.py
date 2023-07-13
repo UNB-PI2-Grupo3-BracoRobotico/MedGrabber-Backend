@@ -28,7 +28,9 @@ class OrderDatabaseHandler:
 
     # Call the stored procedure to create an order
     def create_order(self, order: DatabaseOrder):
-        from pprint import pprint; pprint(order)
+        from pprint import pprint
+
+        pprint(order)
         result = self.session.execute(
             text(
                 "SELECT insert_new_order(:user_id, :order_date, :total_cost, :order_status)"
@@ -40,12 +42,12 @@ class OrderDatabaseHandler:
                 "order_status": order.order_status,
             },
         )
-        
+
         order_id = result.fetchone()[0]
 
         self.session.commit()
 
-        pprint(f'ID DO PEDIDO: {order_id}')
+        pprint(f"ID DO PEDIDO: {order_id}")
 
         for product in order.order_items:
             logger.info(product)
@@ -61,8 +63,6 @@ class OrderDatabaseHandler:
                     "order_id": order_id,
                     "user_id": order.user,
                 },
-                
-
             )
 
         self.session.commit()

@@ -101,18 +101,18 @@ class KafkaClient:
         self.consumer.close()
 
     def encode_message(self, message):
-        logging.info(f'Encoding message: {str(message)}')
+        logging.info(f"Encoding message: {str(message)}")
         return json.dumps(message).encode("utf-8")
 
     def proccess(self, topic, message_data):
-        message = message_data.get('message')
+        message = message_data.get("message")
 
         if topic == "order-status":
             status = message.get("status")
             order = message.get("order_id")
 
             if status == "pending":
-                logging.info('Received order message')
+                logging.info("Received order message")
                 logging.info(message)
                 product_list = self.get_products(order)
 
@@ -123,12 +123,7 @@ class KafkaClient:
                             "status": "processing",
                         }
                     ),
-                    "order-products": (
-                        {
-                            "order_id": order,
-                            "products": product_list
-                        }
-                    )
+                    "order-products": ({"order_id": order, "products": product_list}),
                 }
                 kafka_client.produce(messages_to_send)
 
@@ -141,8 +136,9 @@ class KafkaClient:
         database_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
         session = database_handler.create_session()
 
-        result_proxy = session.execute(text(
-            """
+        result_proxy = session.execute(
+            text(
+                """
             SELECT p.product_id,
                 p.product_name,
                 op.product_amount,
@@ -155,7 +151,8 @@ class KafkaClient:
             JOIN position pos ON pos.product_id = p.product_id
             WHERE op.customer_order_id = :customer_order_id;
             """
-        ).bindparams(customer_order_id=order_id))
+            ).bindparams(customer_order_id=order_id)
+        )
 
         result_set = result_proxy.fetchall()
 
@@ -167,7 +164,7 @@ class KafkaClient:
                 "position_x": row[3],
                 "position_y": row[4],
                 "peso": float(row[5]),
-                "size": row[6]            
+                "size": row[6],
             }
             product_list.append(product)
 

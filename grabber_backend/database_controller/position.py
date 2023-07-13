@@ -31,9 +31,11 @@ class PositionDatabaseHandler:
             )
         )
         print(result_empty_positions)
-        available_positions = sorted([
-            f"{row[0]}{row[1]}"
-            for row in result_empty_positions
-            if len(f"{row[0]}{row[1]}") == 2 and f"{row[0]}{row[1]}".isdigit()
-        ])
+        available_positions = sorted(
+            [
+                f"{row[0]}{row[1]}"
+                for row in result_empty_positions
+                if len(f"{row[0]}{row[1]}") == 2 and f"{row[0]}{row[1]}".isdigit()
+            ]
+        )
         return available_positions

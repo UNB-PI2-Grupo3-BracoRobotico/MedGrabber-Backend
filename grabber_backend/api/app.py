@@ -286,10 +286,11 @@ async def get_user(user_id: str):
     else:
         return user
 
+
 @app.get("/availablePositions/")
 async def get_available_positions():
     db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-    available_positions = []    
+    available_positions = []
     try:
         logger.info(f"Creating database session")
         session = db_handler.create_session()
@@ -304,7 +305,7 @@ async def get_available_positions():
     if status == "failed":
         raise HTTPException(status_code=409, detail="user update failed")
     return {"available_positions": available_positions}
-    
+
 
 @app.get("/products/")
 async def get_product_position_list():
@@ -317,14 +318,11 @@ async def get_product_position_list():
         filled_positions = product_db_handler.get_products()
     except Exception as e:
         logger.error(f"Failed to get products: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get product - {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get product - {e}")
     finally:
         logger.info(f"Closing database session")
         db_handler.close_session(session)
     return {"products": filled_positions}
-
 
 
 @app.post("/products/", status_code=201)

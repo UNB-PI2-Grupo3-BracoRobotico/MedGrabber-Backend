@@ -25,7 +25,6 @@ class OrderStatusEnum(PyEnum):
     canceled = "canceled"
 
 
-
 class PaymentStatusEnum(PyEnum):
     pending = "pending"
     paid = "paid"
@@ -56,13 +55,14 @@ class Product(Base):
     size = Column(ENUM("P", "M", "G"))
 
 
-order_status_type = SQLAlchemyEnum('order_status_type')
+order_status_type = SQLAlchemyEnum("order_status_type")
+
 
 class DatabaseOrder(Base):
-    __tablename__ = 'customer_order'
+    __tablename__ = "customer_order"
 
     customer_order_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String(128), ForeignKey('users.user_id'))
+    user_id = Column(String(128), ForeignKey("users.user_id"))
     order_date = Column(Date)
     total_cost = Column(DECIMAL(10, 2))
     order_status = Column(order_status_type)

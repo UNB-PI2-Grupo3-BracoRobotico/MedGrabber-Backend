@@ -28,7 +28,7 @@ class OrderCreator:
     def receive_order(self):
         if order := self.validate_order(self.order):
             order_id = self.create_order(order)
-            return 'awaiting_payment', order_id
+            return "awaiting_payment", order_id
         else:
             self.logger.info("Order is not valid")
-            return 'canceled', None
+            return "canceled", None
