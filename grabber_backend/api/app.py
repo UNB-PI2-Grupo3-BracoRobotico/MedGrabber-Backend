@@ -221,20 +221,16 @@ async def get_available_positions():
 
 
 @app.get("/products/")
-async def get_product_position_list():
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-    filled_positions = []
+async def get_product_with_position():
     try:
+        db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
         session = db_handler.create_session()
-        product_db_handler = ProductDatabaseHandler(session)
-
-        filled_positions = product_db_handler.get_products()
     except Exception as e:
-        logger.error(f"Failed to get products: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get product - {e}")
-    finally:
-        logger.info(f"Closing database session")
-        db_handler.close_session(session)
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Failed to access dataBase!")
+    product_db_handler = ProductDatabaseHandler(session)
+    filled_positions = product_db_handler.get_products()
+    db_handler.close_session(session)
+    
     return {"products": filled_positions}
 
 
@@ -264,26 +260,20 @@ async def create_product(product: ProductPosition):
 
 
 @app.delete("/products/{product_id}")
-async def delete_product(product_id: int):
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-    logger.info(f"Deleting product with ID: {product_id}")
+async def delete_product(product_id: int, status_code=status.HTTP_200_OK):
     try:
+        db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
         session = db_handler.create_session()
-        product_db_handler = ProductDatabaseHandler(session)
-
-        status = product_db_handler.delete_product(product_id)
-        logger.info(f"Product deleted with ID: {product_id}")
-
     except Exception as e:
-        logger.error(f"Failed to delete product: {e}")
-        return {"status": "Failed to delete product"}, 500
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Failed to access dataBase!")
+    product_db_handler = ProductDatabaseHandler(session)
+    logger.info(f"Deleting product with ID: {product_id}")
+    message = product_db_handler.delete_product(product_id)
+    logger.info(f"Product deleted with ID: {product_id}")
+    logger.info(f"Closing database session")
+    db_handler.close_session(session)
 
-    finally:
-        logger.info(f"Closing database session")
-        db_handler.close_session(session)
-
-    logger.info(f"Sending response back to client")
-    return {"status": f"{status}"}
+    return message
 
 
 @app.put("/products/{product_id}")

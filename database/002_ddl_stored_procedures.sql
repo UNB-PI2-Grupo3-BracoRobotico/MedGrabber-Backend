@@ -139,6 +139,30 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
+
+CREATE OR REPLACE FUNCTION delete_product(
+    p_product_id INTEGER
+)  RETURNS VOID AS $$
+BEGIN
+    UPDATE position
+        SET product_id = NULL,
+            product_amount = 0,
+            modified_at = CURRENT_TIMESTAMP
+        WHERE product_id = p_product_id
+            AND is_exit = FALSE;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Position not found or is an exit';
+    END IF;
+
+    DELETE FROM product WHERE product_id = p_product_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Product not found, cant be deleted';
+    END IF;
+END
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION update_product_and_position(
     p_product_id INTEGER,
     p_product_name VARCHAR(50),

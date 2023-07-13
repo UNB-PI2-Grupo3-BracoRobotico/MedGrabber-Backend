@@ -2,6 +2,7 @@ import logging
 from sqlalchemy import text, Column, Integer, String, Numeric, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 import datetime
+from fastapi import status, HTTPException
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -13,33 +14,35 @@ class ProductDatabaseHandler:
 
     def get_products(self):
         session = self.session
-        status = ""
-        result_filled_positions = session.execute(
-            text(
-                """
-            SELECT 
-                p.product_id,
-                p.product_name,
-                p.product_description,
-                p.product_price,
-                p.peso,
-                p.size,
-                p.modified_by,
-                pos.product_amount,
-                pos.position_x,
-                pos.position_y
-            FROM 
-                position pos
-            JOIN 
-                product p 
-            ON 
-                pos.product_id = p.product_id
-            WHERE 
-                pos.is_exit = FALSE;
-        """
+        try: 
+            result_filled_positions = session.execute(
+                text(
+                    """
+                SELECT 
+                    p.product_id,
+                    p.product_name,
+                    p.product_description,
+                    p.product_price,
+                    p.peso,
+                    p.size,
+                    p.modified_by,
+                    pos.product_amount,
+                    pos.position_x,
+                    pos.position_y
+                FROM 
+                    position pos
+                JOIN 
+                    product p 
+                ON 
+                    pos.product_id = p.product_id
+                WHERE 
+                    pos.is_exit = FALSE;
+            """
+                )
             )
-        )
-
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed select products!")
+        
         filled_positions = [
             {
                 "product_id": row[0],
@@ -94,46 +97,29 @@ class ProductDatabaseHandler:
             status = "failed"
 
         return status
-
+    
     def delete_product(self, product_id):
         session = self.session
-        status = ""
-
         try:
             logger.info(f"Deleting product with ID: {product_id}")
-
             session.execute(
                 text(
                     """
-                    UPDATE position
-                    SET product_id = NULL,
-                        product_amount = 0
-                    WHERE product_id = :product_id;
-                """
-                ),
-                {"product_id": product_id},
-            )
-
-            session.execute(
-                text(
+                    SELECT delete_product(
+                        :product_id
+                    )
                     """
-                    DELETE FROM product WHERE product_id = :product_id;
-                """
                 ),
                 {"product_id": product_id},
             )
-
             session.commit()
-
-            status = "deleted"
-
         except Exception as e:
             logger.error(f"Failed to delete product with ID {product_id}: {e}")
             session.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Product {product_id} not founded!")
+        
+        return {"message": f"Product {product_id} deleted successfully"}
 
-            status = "failed"
-
-        return status
 
     def update_product(self, product_id, update_product):
         session = self.session
