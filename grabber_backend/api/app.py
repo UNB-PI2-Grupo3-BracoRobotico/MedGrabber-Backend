@@ -2,7 +2,10 @@ from time import sleep
 from typing import Optional, List
 import logging
 from datetime import datetime
-
+import pickle
+import base64
+import io
+from starlette.responses import StreamingResponse, Response
 from fastapi import FastAPI, BackgroundTasks, HTTPException, status
 from pydantic import BaseModel
 from confluent_kafka import Producer
@@ -237,6 +240,26 @@ async def get_product_position_list():
         db_handler.close_session(session)
     return {"products": filled_positions}
 
+@app.get("/orders/bytes")
+async def get_orders():
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    orders = []
+    try:
+        session = db_handler.create_session()
+        order_db_handler = OrderDatabaseHandler(session)
+
+        orders = order_db_handler.get_orders()
+
+        orders_bytes = pickle.dumps(orders)
+        orders_base64 = base64.b64encode(orders_bytes)
+
+        return Response(content=orders_base64, media_type="application/octet-stream")
+    except Exception as e:
+        logger.error(f"Failed to get orders: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get orders - {e}")
+    finally:
+        logger.info(f"Closing database session")
+        db_handler.close_session(session)
 
 @app.post("/products/", status_code=201)
 async def create_product(product: ProductPosition):
