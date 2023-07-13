@@ -16,6 +16,7 @@ from grabber_backend.database_controller.models import User
 from grabber_backend.database_controller.product import ProductDatabaseHandler
 from grabber_backend.database_controller.position import PositionDatabaseHandler
 from grabber_backend.database_controller.models import Product, Position
+from grabber_backend.database_controller.order import OrderDatabaseHandler
 
 
 logger = logging.getLogger(__name__)
@@ -104,108 +105,20 @@ async def create_order(order: ApiOrder, background_tasks: BackgroundTasks):
 
 @app.get("/orders/")
 async def get_orders():
-    # TODO: Implement actual database query
+    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    orders = []
+    try:
+        session = db_handler.create_session()
+        order_db_handler = OrderDatabaseHandler(session)
 
-    # TODO: Define possible status for order - Must be (awaiting payment, pending, processing, ready to get, delivered)
-    # make them as they are here but in snake_case - (awaiting_payment, pending, processing, ready_to_get, delivered)
-
-    # TODO: Insert proper dating format
-
-    # TODO: order_items are missing description
-    return {
-        "orders": [
-            {
-                "id": 1,
-                "user": "bobross",
-                "order_items": [
-                    {
-                        "id": 1,
-                        "name": "Caixa de Papelão",
-                        "price": 10.0,
-                        "quantity": 2,
-                        "position_x": 0,
-                        "position_y": 1,
-                        "size": "M",
-                        "weight": 0.5,
-                    },
-                    {
-                        "id": 2,
-                        "name": "Livro: Python for Dummies",
-                        "price": 20.0,
-                        "quantity": 1,
-                        "position_x": 0,
-                        "position_y": 0,
-                        "size": "M",
-                        "weight": 0.3,
-                    },
-                ],
-                "total_price": 40.0,
-                "payment_method": "pix",
-                "status": "pending",
-                "date": 1688922791,
-            },
-            {
-                "id": 2,
-                "user": "johndoe",
-                "order_items": [
-                    {
-                        "id": 3,
-                        "name": "Controle Logitech",
-                        "price": 30.0,
-                        "quantity": 1,
-                        "position_x": 1,
-                        "position_y": 0,
-                        "size": "P",
-                        "weight": 0.2,
-                    },
-                    {
-                        "id": 4,
-                        "name": "Mouse Bluetooth",
-                        "price": 40.0,
-                        "quantity": 3,
-                        "position_x": 0,
-                        "position_y": 1,
-                        "size": "M",
-                        "weight": 0.3,
-                    },
-                ],
-                "total_price": 150.0,
-                "payment_method": "pix",
-                "status": "delivered",
-                "date": 1594314791,
-            },
-            {
-                "id": 2,
-                "user": "johndoe",
-                "order_items": [
-                    {
-                        "id": 5,
-                        "name": "Licor Baileys",
-                        "price": 100.0,
-                        "quantity": 6,
-                        "position_x": 0,
-                        "position_y": 2,
-                        "size": "G",
-                        "weight": 1.0,
-                    },
-                    {
-                        "id": 4,
-                        "name": "Mouse Bluetooth",
-                        "price": 40.0,
-                        "quantity": 1,
-                        "position_x": 2,
-                        "position_y": 2,
-                        "size": "P",
-                        "weight": 0.3,
-                    },
-                ],
-                "total_price": 640.0,
-                "payment_method": "pix",
-                "status": "canceled",
-                "date": 1594833191,
-            },
-        ]
-    }
+        orders = order_db_handler.get_orders()
+    except Exception as e:
+        logger.error(f"Failed to get orders: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get orders - {e}")
+    finally:
+        logger.info(f"Closing database session")
+        db_handler.close_session(session)
+    return {"orders": orders}
 
 
 @app.post("/users/", status_code=status.HTTP_201_CREATED)
