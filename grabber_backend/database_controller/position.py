@@ -13,24 +13,25 @@ class PositionDatabaseHandler:
 
     def get_available_positions(self):
         session = self.session
-        status = ""
-        available_positions = []
 
-        result_empty_positions = session.execute(
-            text(
+        try:
+            result_empty_positions = session.execute(
+                text(
+                    """
+                SELECT 
+                    pos.position_x,
+                    pos.position_y
+                FROM 
+                    position pos
+                WHERE 
+                    pos.product_id IS NULL AND 
+                    pos.is_exit = FALSE;
                 """
-            SELECT 
-                pos.position_x,
-                pos.position_y
-            FROM 
-                position pos
-            WHERE 
-                pos.product_id IS NULL AND 
-                pos.is_exit = FALSE;
-            """
+                )
             )
-        )
-        print(result_empty_positions)
+        except Exception as e:
+            raise HTTPException(status_code=409, detail="user update failed")
+
         available_positions = sorted(
             [
                 f"{row[0]}{row[1]}"
