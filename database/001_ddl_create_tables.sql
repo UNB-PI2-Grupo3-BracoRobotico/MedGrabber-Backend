@@ -1,4 +1,9 @@
 CREATE TYPE user_role_type as ENUM ('customer', 'stock_manager');
+CREATE TYPE aud_status_enum as ENUM (
+    'created',
+    'edited',
+    'deleted'
+);
 CREATE TYPE order_status_type as ENUM (
     'awaiting_payment',
     'pending',
@@ -25,7 +30,23 @@ CREATE TABLE product (
     modified_at TIMESTAMP,
     peso DECIMAL(8, 2),
     size product_size_enum,
+    is_hidden BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (modified_by) REFERENCES users(user_id)
+);
+
+CREATE TABLE product_aud (
+    product_aud_id SERIAL PRIMARY KEY,
+    product_id SERIAL,
+    product_name VARCHAR(50),
+    product_description VARCHAR(300),
+    product_price DECIMAL(10, 2),
+    modified_by VARCHAR(128),
+    modified_at TIMESTAMP,
+    peso DECIMAL(8, 2),
+    size product_size_enum,
+    aud_status aud_status_enum,
+    FOREIGN KEY (modified_by) REFERENCES users(user_id),
+    FOREIGN KEY (product_id) REFERENCES product(product_id)
 );
 
 CREATE TABLE customer_order (

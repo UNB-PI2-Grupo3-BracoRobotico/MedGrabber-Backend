@@ -33,10 +33,11 @@ class ProductDatabaseHandler:
                     position pos
                 JOIN 
                     product p 
-                ON 
+                ON
                     pos.product_id = p.product_id
                 WHERE 
-                    pos.is_exit = FALSE;
+                    is_hidden = FALSE
+                    AND pos.is_exit = FALSE;
             """
                 )
             )

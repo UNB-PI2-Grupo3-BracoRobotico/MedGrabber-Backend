@@ -122,6 +122,9 @@ BEGIN
     INSERT INTO product (product_name, product_description, product_price, peso, size, modified_by, modified_at)
     VALUES (p_product_name, p_product_description, p_product_price, p_peso, p_size, p_modified_by_user_id, CURRENT_TIMESTAMP)
     RETURNING product_id INTO v_product_id;
+    
+    INSERT INTO product_aud (product_id, product_name, product_description, product_price, peso, size, modified_by, aud_status, modified_at)
+    VALUES (v_product_id, p_product_name, p_product_description, p_product_price, p_peso, p_size, p_modified_by_user_id, 'created' , CURRENT_TIMESTAMP);
 
     UPDATE position
     SET product_id = v_product_id,
@@ -143,6 +146,14 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION delete_product(
     p_product_id INTEGER
 )  RETURNS VOID AS $$
+DECLARE
+    v_product_id INTEGER;
+    v_product_name VARCHAR(50);
+    v_product_description VARCHAR(300);
+    v_product_price DECIMAL(10,2);
+    v_peso DECIMAL(8,2);
+    v_size product_size_enum;
+    v_modified_by_user VARCHAR(128);
 BEGIN
     UPDATE position
         SET product_id = NULL,
@@ -155,7 +166,31 @@ BEGIN
         RAISE EXCEPTION 'Position not found or is an exit';
     END IF;
 
-    DELETE FROM product WHERE product_id = p_product_id;
+    SELECT 
+        product_id,
+        product_name, 
+        product_description, 
+        product_price, 
+        peso, 
+        size, 
+        modified_by
+        INTO 
+            v_product_id, 
+            v_product_name, 
+            v_product_description, 
+            v_product_price, 
+            v_peso, 
+            v_size, 
+            v_modified_by_user
+        FROM product
+        WHERE product_id = p_product_id;
+
+    INSERT INTO product_aud (product_id, product_name, product_description, product_price, peso, size, modified_by, aud_status, modified_at)
+    VALUES (v_product_id, v_product_name, v_product_description, v_product_price, v_peso, v_size, v_modified_by_user, 'deleted' , CURRENT_TIMESTAMP);
+
+    UPDATE product
+        SET is_hidden = TRUE
+        WHERE product_id = p_product_id;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Product not found, cant be deleted';
@@ -176,13 +211,13 @@ CREATE OR REPLACE FUNCTION update_product(
     p_product_amount INTEGER
 )  RETURNS VOID AS $$
 BEGIN
-     UPDATE position
+    UPDATE position
         SET product_id = NULL,
         product_amount = 0,
         modified_at = CURRENT_TIMESTAMP,
         modified_by = p_modified_by_user
         WHERE
-            product_id = p_product_id;
+            product_id = p_product_id;    
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Position not found or is an exit';
@@ -217,6 +252,9 @@ BEGIN
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Product not founded';
     END IF;
+
+    INSERT INTO product_aud (product_id, product_name, product_description, product_price, peso, size, modified_by, aud_status, modified_at)
+    VALUES (p_product_id, p_product_name, p_product_description, p_product_price, p_peso, p_size, p_modified_by_user, 'edited' , CURRENT_TIMESTAMP);
 END
 $$ LANGUAGE plpgsql;
 
