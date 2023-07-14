@@ -81,6 +81,10 @@ class ProductPosition(BaseModel):
     amount: int
 
 
+class ProductDeleteBody(BaseModel):
+    modified_by_user: str
+
+
 app = FastAPI()
 
 
@@ -202,108 +206,82 @@ async def get_user(user_id: str):
 
 @app.get("/availablePositions/")
 async def get_available_positions():
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-    available_positions = []
     try:
+        db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
         logger.info(f"Creating database session")
         session = db_handler.create_session()
-        position_db_handler = PositionDatabaseHandler(session)
-        available_positions = position_db_handler.get_available_positions()
     except Exception as e:
-        logger.error(f"Failed to update user: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get available positions")
-    finally:
-        db_handler.close_session(session)
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Failed to access database!")
+    position_db_handler = PositionDatabaseHandler(session)
+    available_positions = position_db_handler.get_available_positions()
+    logger.info(f"Closing database session")
+    db_handler.close_session(session)
     logger.info(f"Sending response back to client")
-    if status == "failed":
-        raise HTTPException(status_code=409, detail="user update failed")
     return {"available_positions": available_positions}
 
 
 @app.get("/products/")
-async def get_product_position_list():
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-    filled_positions = []
+async def get_product_with_position():
     try:
+        db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
         session = db_handler.create_session()
-        product_db_handler = ProductDatabaseHandler(session)
-
-        filled_positions = product_db_handler.get_products()
     except Exception as e:
-        logger.error(f"Failed to get products: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get product - {e}")
-    finally:
-        logger.info(f"Closing database session")
-        db_handler.close_session(session)
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Failed to access database!")
+    product_db_handler = ProductDatabaseHandler(session)
+    filled_positions = product_db_handler.get_products()
+    db_handler.close_session(session)
+    
     return {"products": filled_positions}
 
 
 @app.post("/products/", status_code=201)
 async def create_product(product: ProductPosition):
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+    try:
+        db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+        session = db_handler.create_session()
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Failed to access database!")
+    
+    product_db_handler = ProductDatabaseHandler(session)
     logger.info(f"Creating product: {product}")
-    try:
-        session = db_handler.create_session()
-        product_db_handler = ProductDatabaseHandler(session)
-
-        status = product_db_handler.insert_product(product)
-        logger.info(f"Product created: {product}")
-
-    except Exception as e:
-        logger.error(f"Failed to create/update product: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to create/update product - {e}"
-        )
-
-    finally:
-        logger.info(f"Closing database session")
-        db_handler.close_session(session)
-
+    message = product_db_handler.insert_product(product)
+    logger.info(f"Product created: {product}")
+    logger.info(f"Closing database session")
+    db_handler.close_session(session)
     logger.info(f"Sending response back to client")
-    return {"status": f"{status}"}
+    return {"message": message}
 
 
-@app.delete("/products/{product_id}")
-async def delete_product(product_id: int):
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+@app.delete("/products/{product_id}", status_code=status.HTTP_200_OK)
+async def delete_product(product_id: int, delete_product: ProductDeleteBody):
+    try:
+        db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
+        session = db_handler.create_session()
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Failed to access database!")
+    product_db_handler = ProductDatabaseHandler(session)
     logger.info(f"Deleting product with ID: {product_id}")
-    try:
-        session = db_handler.create_session()
-        product_db_handler = ProductDatabaseHandler(session)
+    message = product_db_handler.delete_product(product_id, delete_product)
+    logger.info(f"Product deleted with ID: {product_id}")
+    logger.info(f"Closing database session")
+    db_handler.close_session(session)
 
-        status = product_db_handler.delete_product(product_id)
-        logger.info(f"Product deleted with ID: {product_id}")
-
-    except Exception as e:
-        logger.error(f"Failed to delete product: {e}")
-        return {"status": "Failed to delete product"}, 500
-
-    finally:
-        logger.info(f"Closing database session")
-        db_handler.close_session(session)
-
-    logger.info(f"Sending response back to client")
-    return {"status": f"{status}"}
+    return {"message": message}
 
 
 @app.put("/products/{product_id}")
 async def update_product(product_id: int, updated_product: ProductPosition):
-    db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
-    logger.info(f"Updating product with ID: {product_id}")
     try:
+        db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
         session = db_handler.create_session()
-        product_db_handler = ProductDatabaseHandler(session)
-
-        status = product_db_handler.update_product(product_id, updated_product)
-        logger.info(f"Product updated with ID: {product_id}")
-
     except Exception as e:
-        logger.error(f"Failed to update product: {e}")
-        return {"status": "Failed to update product"}, 500
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Failed to access database!")
+    
+    product_db_handler = ProductDatabaseHandler(session)
+    message = product_db_handler.update_product(product_id, updated_product)
+    logger.info(f"Product updated with ID: {product_id}")
 
-    finally:
-        logger.info(f"Closing database session")
-        db_handler.close_session(session)
-
+    logger.info(f"Closing database session")
+    db_handler.close_session(session)
     logger.info(f"Sending response back to client")
-    return {"status": f"{status}"}
+    return {"message": message}

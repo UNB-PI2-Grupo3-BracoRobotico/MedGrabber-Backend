@@ -85,9 +85,7 @@ class OrderDatabaseHandler:
                 p.product_name,
                 p.product_description,
                 p.product_price,
-                op.product_amount,
-                pos.position_x,
-                pos.position_y
+                op.product_amount
             FROM
                 customer_order co
             JOIN 
@@ -96,7 +94,7 @@ class OrderDatabaseHandler:
                 order_product op ON co.customer_order_id = op.customer_order_id
             JOIN 
                 product p ON op.product_id = p.product_id
-            JOIN
+            LEFT JOIN
                 position pos ON p.product_id = pos.product_id;
         """
             )
@@ -117,8 +115,6 @@ class OrderDatabaseHandler:
                 "product_description": row[8],
                 "product_price": float(row[9]),
                 "product_amount": row[10],
-                "position_x": row[11],
-                "position_y": row[12],
             }
             orders_dict[order_id]["products"].add(json.dumps(product))
 

@@ -2,6 +2,7 @@ import logging
 from sqlalchemy import text, Column, Integer, String, Numeric, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 import datetime
+from fastapi import status, HTTPException
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -13,33 +14,37 @@ class ProductDatabaseHandler:
 
     def get_products(self):
         session = self.session
-        status = ""
-        result_filled_positions = session.execute(
-            text(
-                """
-            SELECT 
-                p.product_id,
-                p.product_name,
-                p.product_description,
-                p.product_price,
-                p.peso,
-                p.size,
-                p.modified_by,
-                pos.product_amount,
-                pos.position_x,
-                pos.position_y
-            FROM 
-                position pos
-            JOIN 
-                product p 
-            ON 
-                pos.product_id = p.product_id
-            WHERE 
-                pos.is_exit = FALSE;
-        """
+        try: 
+            result_filled_positions = session.execute(
+                text(
+                    """
+                SELECT 
+                    p.product_id,
+                    p.product_name,
+                    p.product_description,
+                    p.product_price,
+                    p.peso,
+                    p.size,
+                    p.modified_by,
+                    pos.product_amount,
+                    pos.position_x,
+                    pos.position_y
+                FROM 
+                    position pos
+                JOIN 
+                    product p 
+                ON
+                    pos.product_id = p.product_id
+                WHERE 
+                    is_hidden = FALSE
+                    AND pos.is_exit = FALSE;
+            """
+                )
             )
-        )
-
+        except Exception as e:
+            logger.error(f"Failed to get products with position")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed select products!")
+        
         filled_positions = [
             {
                 "product_id": row[0],
@@ -59,8 +64,6 @@ class ProductDatabaseHandler:
 
     def insert_product(self, product):
         session = self.session
-        status = ""
-
         try:
             logger.info(f"Inserting product: {product.product_name}")
 
@@ -82,134 +85,78 @@ class ProductDatabaseHandler:
                 ),
                 params=product.dict(),
             )
-
             session.commit()
-
-            status = "inserted"
-
         except Exception as e:
             logger.error(f"Failed to insert product: {product.product_name} - {e}")
             session.rollback()
-
-            status = "failed"
-
-        return status
-
-    def delete_product(self, product_id):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Product already exist in this position!")
+            
+        return "product created"
+    
+    def delete_product(self, product_id, delete_product):
         session = self.session
-        status = ""
-
         try:
             logger.info(f"Deleting product with ID: {product_id}")
-
             session.execute(
                 text(
                     """
-                    UPDATE position
-                    SET product_id = NULL,
-                        product_amount = 0
-                    WHERE product_id = :product_id;
-                """
-                ),
-                {"product_id": product_id},
-            )
-
-            session.execute(
-                text(
+                    SELECT delete_product(
+                        :product_id,
+                        :modified_by
+                    )
                     """
-                    DELETE FROM product WHERE product_id = :product_id;
-                """
                 ),
-                {"product_id": product_id},
+                {
+                    "product_id": product_id,
+                    "modified_by": delete_product.modified_by_user
+                },
             )
-
             session.commit()
-
-            status = "deleted"
-
         except Exception as e:
             logger.error(f"Failed to delete product with ID {product_id}: {e}")
             session.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Product {product_id} not founded!")
+        
+        return f"Product {product_id} deleted successfully"
 
-            status = "failed"
-
-        return status
 
     def update_product(self, product_id, update_product):
         session = self.session
-        status = ""
-
         try:
-            logger.info(f"Updating product: {product_id}")
-            session.execute(
-                text(
-                    """
-                    UPDATE position
-                    SET product_id = NULL
-                    WHERE
-                        product_id = :product_id;
-                    """
-                ),
-                {"product_id": product_id},
-            )
 
             session.execute(
                 text(
                     """
-                    UPDATE position
-                    SET product_id = :product_id,
-                        product_amount = :amount,
-                        modified_by = :modified_by_user,
-                        modified_at = CURRENT_TIMESTAMP
-                    WHERE 
-                        position_x = :position_x 
-                        AND position_y = :position_y 
-                        AND is_exit = FALSE; 
-                """
-                ),
-                {
-                    "product_id": product_id,
-                    "amount": update_product.amount,
-                    "position_x": update_product.position_x,
-                    "position_y": update_product.position_y,
-                    "modified_by_user": update_product.modified_by_user,
-                },
-            )
-
-            session.execute(
-                text(
+                    SELECT update_product(
+                        :product_id,
+                        :product_name,
+                        :product_description,
+                        :product_price,
+                        :peso,
+                        :size,
+                        :modified_by_user,
+                        :position_x,
+                        :position_y,
+                        :product_amount 
+                    )
                     """
-                    UPDATE product
-                    SET
-                        product_name = :product_name,
-                        product_description = :product_description,
-                        product_price = :product_price,
-                        peso = :peso,
-                        size = :size,
-                        modified_by = :modified_by_user,
-                        modified_at = CURRENT_TIMESTAMP
-                    WHERE
-                        product_id = :product_id;
-                """
                 ),
                 {
                     "product_id": product_id,
-                    "modified_by_user": update_product.modified_by_user,
                     "product_name": update_product.product_name,
                     "product_description": update_product.product_description,
                     "product_price": update_product.product_price,
                     "peso": update_product.peso,
                     "size": update_product.size,
                     "modified_by_user": update_product.modified_by_user,
+                    "position_x": update_product.position_x,
+                    "position_y": update_product.position_y,
+                    "product_amount": update_product.amount,
                 },
             )
             session.commit()
-            status = "updated"
-
         except Exception as e:
             logger.error(f"Failed to update product: {product_id} - {e}")
             session.rollback()
-
-            status = "failed"
-
-        return status
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="product update failed")
+        return f"Product {product_id} updated succesfully"
