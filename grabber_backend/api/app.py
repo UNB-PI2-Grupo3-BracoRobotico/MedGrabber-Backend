@@ -81,6 +81,10 @@ class ProductPosition(BaseModel):
     amount: int
 
 
+class ProductDeleteBody(BaseModel):
+    modified_by_user: str
+
+
 app = FastAPI()
 
 
@@ -248,8 +252,8 @@ async def create_product(product: ProductPosition):
     return {"message": message}
 
 
-@app.delete("/products/{product_id}")
-async def delete_product(product_id: int, status_code=status.HTTP_200_OK):
+@app.delete("/products/{product_id}", status_code=status.HTTP_200_OK)
+async def delete_product(product_id: int, delete_product: ProductDeleteBody):
     try:
         db_handler = DatabaseHandler(DATABASE_CONNECTION_STRING)
         session = db_handler.create_session()
@@ -257,7 +261,7 @@ async def delete_product(product_id: int, status_code=status.HTTP_200_OK):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Failed to access database!")
     product_db_handler = ProductDatabaseHandler(session)
     logger.info(f"Deleting product with ID: {product_id}")
-    message = product_db_handler.delete_product(product_id)
+    message = product_db_handler.delete_product(product_id, delete_product)
     logger.info(f"Product deleted with ID: {product_id}")
     logger.info(f"Closing database session")
     db_handler.close_session(session)

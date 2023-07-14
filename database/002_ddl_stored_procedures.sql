@@ -144,20 +144,20 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION delete_product(
-    p_product_id INTEGER
+    p_product_id INTEGER,
+    p_modified_by_user_id VARCHAR(128)
 )  RETURNS VOID AS $$
 DECLARE
-    v_product_id INTEGER;
     v_product_name VARCHAR(50);
     v_product_description VARCHAR(300);
     v_product_price DECIMAL(10,2);
     v_peso DECIMAL(8,2);
     v_size product_size_enum;
-    v_modified_by_user VARCHAR(128);
 BEGIN
     UPDATE position
         SET product_id = NULL,
             product_amount = 0,
+            modified_by = p_modified_by_user_id,
             modified_at = CURRENT_TIMESTAMP
         WHERE product_id = p_product_id
             AND is_exit = FALSE;
@@ -167,33 +167,29 @@ BEGIN
     END IF;
 
     SELECT 
-        product_id,
         product_name, 
         product_description, 
         product_price, 
         peso, 
-        size, 
-        modified_by
-        INTO 
-            v_product_id, 
-            v_product_name, 
-            v_product_description, 
-            v_product_price, 
-            v_peso, 
-            v_size, 
-            v_modified_by_user
-        FROM product
-        WHERE product_id = p_product_id;
+        size
+    INTO 
+        v_product_name, 
+        v_product_description, 
+        v_product_price, 
+        v_peso, 
+        v_size
+    FROM product
+    WHERE product_id = p_product_id;
 
     INSERT INTO product_aud (product_id, product_name, product_description, product_price, peso, size, modified_by, aud_status, modified_at)
-    VALUES (v_product_id, v_product_name, v_product_description, v_product_price, v_peso, v_size, v_modified_by_user, 'deleted' , CURRENT_TIMESTAMP);
+    VALUES (p_product_id, v_product_name, v_product_description, v_product_price, v_peso, v_size, p_modified_by_user_id, 'deleted' , CURRENT_TIMESTAMP);
 
     UPDATE product
         SET is_hidden = TRUE
         WHERE product_id = p_product_id;
 
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Product not found, cant be deleted';
+        RAISE EXCEPTION 'Product not found, cannot be deleted';
     END IF;
 END
 $$ LANGUAGE plpgsql;

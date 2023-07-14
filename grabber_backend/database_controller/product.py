@@ -93,7 +93,7 @@ class ProductDatabaseHandler:
             
         return "product created"
     
-    def delete_product(self, product_id):
+    def delete_product(self, product_id, delete_product):
         session = self.session
         try:
             logger.info(f"Deleting product with ID: {product_id}")
@@ -101,11 +101,15 @@ class ProductDatabaseHandler:
                 text(
                     """
                     SELECT delete_product(
-                        :product_id
+                        :product_id,
+                        :modified_by
                     )
                     """
                 ),
-                {"product_id": product_id},
+                {
+                    "product_id": product_id,
+                    "modified_by": delete_product.modified_by_user
+                },
             )
             session.commit()
         except Exception as e:
