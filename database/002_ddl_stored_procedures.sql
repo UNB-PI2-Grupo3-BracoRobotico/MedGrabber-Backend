@@ -82,8 +82,8 @@ DECLARE
     v_position_x INTEGER;
     v_position_y INTEGER;
 BEGIN
-    FOR v_position_x IN 1..5 LOOP
-        FOR v_position_y IN 1..5 LOOP
+    FOR v_position_x IN 0..6 LOOP
+        FOR v_position_y IN 0..4 LOOP
             INSERT INTO position (position_x, position_y, is_exit)
             VALUES (v_position_x, v_position_y, FALSE)
             ON CONFLICT (position_x, position_y) DO NOTHING;
