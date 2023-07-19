@@ -90,7 +90,8 @@ BEGIN
         END LOOP;
     END LOOP;
     -- Set a position as an exit point
-    UPDATE position SET is_exit = TRUE WHERE position_x = 5 AND position_y = 5;
+    UPDATE position SET is_exit = TRUE WHERE position_x = 0 AND position_y = 0;
+    UPDATE position SET is_exit = TRUE WHERE position_x = 0 AND position_y = 1;
 EXCEPTION
     WHEN OTHERS THEN
         RAISE EXCEPTION 'Failed to initialize positions: %', SQLERRM;
